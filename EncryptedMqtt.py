@@ -1,21 +1,30 @@
 import threading
+from collections.abc import Callable
+from typing import Any
+
 import paho.mqtt.client as mqtt
 from Crypto.Cipher import AES
 from Crypto.Hash import MD5
 
 
-def _unpad(s):
-    return s[:-ord(s[len(s) - 1:])]
+# noinspection PyUnusedLocal
+def _on_message_decrypted_stub(client: mqtt.Client, userdata: Any, mac: str, decrypted: bytes,
+                               message: mqtt.MQTTMessage):
+    pass
 
 
 class EncryptedMqtt(mqtt.Client):
+
+    _on_message_decrypted: Callable[[mqtt.Client, Any, str, bytes, mqtt.MQTTMessage], None]
+    _callback_mutex_decrypted: threading.RLock
+    _keys: dict[str, bytes]
 
     def __init__(self, client_id="", clean_session=None, userdata=None,
                  protocol=mqtt.MQTTv311, transport="tcp"):
         super().__init__(client_id, clean_session, userdata, protocol, transport)
         self._keys = dict()
         self._callback_mutex_decrypted = threading.RLock()
-        self._on_message_decrypted = None
+        self._on_message_decrypted = _on_message_decrypted_stub
 
     def connect(self, host="91.196.132.126", port=1883, keepalive=60, bind_address="", bind_port=0,
                 clean_start=mqtt.MQTT_CLEAN_START_FIRST_ONLY, properties=None):
@@ -30,12 +39,12 @@ class EncryptedMqtt(mqtt.Client):
         return self._on_message_decrypted
 
     @on_message_decrypted.setter
-    def on_message_decrypted(self, func):
+    def on_message_decrypted(self, func: Callable[[mqtt.Client, Any, str, bytes, mqtt.MQTTMessage], None]):
         with self._callback_mutex_decrypted:
             self._on_message_decrypted = func
 
     def on_message_internal(self, client, userdata, message):
-        mac = message.topic.split('/')[-1]
+        mac: str = message.topic.split('/')[-1]
         if mac not in self._keys:
             self._keys[mac] = self.get_key(mac)
 
@@ -43,21 +52,24 @@ class EncryptedMqtt(mqtt.Client):
         decrypted = self.decrypt(message.payload, key) if len(message.payload) > 0 else message.payload
         self.on_message_decrypted(client, userdata, mac, decrypted, message)
 
-    @staticmethod
-    def decrypt(enc, key):
+    def decrypt(self, enc: bytes, key: bytes) -> bytes:
         iv = enc[:AES.block_size]
         cipher = AES.new(key, AES.MODE_CBC, iv)
         dec = cipher.decrypt(enc)
-        return _unpad(dec)
+        return self._unpad(dec)
 
     @staticmethod
-    def get_key(mac):
+    def get_key(mac: str) -> bytes:
         magic_odd = '2Y10-6012-Y4'
         result = mac[::2]
         result += magic_odd
 
-        h = MD5.new()
+        h: MD5 = MD5.new()
         h.update(result.encode('utf-8'))
         result = h.hexdigest()[8: 24]
 
         return result.encode('utf-8')
+
+    @staticmethod
+    def _unpad(s: bytes) -> bytes:
+        return s[:-ord(s[len(s) - 1:])]

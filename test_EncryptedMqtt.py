@@ -1,5 +1,4 @@
 from unittest import TestCase
-
 from EncryptedMqtt import EncryptedMqtt
 
 
@@ -13,6 +12,7 @@ class TestEncryptedMqtt(TestCase):
     def test_decrypt(self):
         key = bytes.fromhex("33323931356565303561643566623034")  # mac ('08bc20043d34')
         encrypted = bytes.fromhex('4b69753535d25af38a1ed107312a6c742da7506064d6c4c14c7a210d8888ed47')
-        decrypted = EncryptedMqtt.decrypt(encrypted, key)
+        mqtt = EncryptedMqtt()
+        decrypted = mqtt.decrypt(encrypted, key)
         expected = bytes.fromhex("d2f15e050abd3fc7f07e753257485c5e05000000b2")
         self.assertEqual(expected, decrypted)

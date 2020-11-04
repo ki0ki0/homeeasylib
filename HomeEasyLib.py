@@ -1,10 +1,14 @@
 import time
+from typing import Any
+
+import paho.mqtt.client as mqtt
 
 from DeviceState import DeviceState
 from EncryptedMqtt import EncryptedMqtt
 
 
-def on_message(client, userdata, mac, decrypted, message):
+# noinspection PyUnusedLocal
+def on_message(client: mqtt.Client, userdata: Any, mac: str, decrypted: bytes, message: mqtt.MQTTMessage):
     print(f"{mac}({len(message.payload)}): {message.payload.hex()} {decrypted.hex()}")
     state = DeviceState()
     if len(decrypted) == 0:
