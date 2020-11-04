@@ -5,7 +5,7 @@ from EncryptedMqtt import EncryptedMqtt
 
 
 def on_message(client, userdata, mac, decrypted, message):
-    print(f"{mac}({len(message.payload)}): {decrypted.hex()}")
+    print(f"{mac}({len(message.payload)}): {message.payload.hex()} {decrypted.hex()}")
     state = DeviceState()
     if len(decrypted) == 0:
         return
