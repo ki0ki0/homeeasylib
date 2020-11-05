@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Any
 
 
 class DeviceState:
@@ -16,7 +16,7 @@ class DeviceState:
     def int2bits(self, x: int) -> List[int]:
         return [self.get_bit(x, pos) for pos in range(8)]
 
-    def parse3(self, byte: int) -> Dict[str]:
+    def parse3(self, byte: int) -> Dict[str, Any]:
         bits = self.int2bits(byte)
         run_mode: str = "".join(map(str, [bits[5], bits[6], bits[7]]))
         boot = bits[4]
@@ -29,7 +29,7 @@ class DeviceState:
             "cpmode": cp_mode
         }
 
-    def parse4(self, byte: int) -> Dict[str]:
+    def parse4(self, byte: int) -> Dict[str, Any]:
         bit = self.int2bits(byte)
         mute = bit[1]
         temp_type = bit[2]
@@ -48,7 +48,7 @@ class DeviceState:
             "wdNumber": wd_number
         }
 
-    def parse5(self, byte: int) -> Dict[str]:
+    def parse5(self, byte: int) -> Dict[str, Any]:
         bits = self.int2bits(byte)
 
         wind_lr: str = "".join(map(str, [bits[0], bits[1], bits[2], bits[3]]))
@@ -58,7 +58,7 @@ class DeviceState:
             "windTB": wind_tb
         }
 
-    def parse6(self, byte: int) -> Dict[str]:
+    def parse6(self, byte: int) -> Dict[str, Any]:
         bits = self.int2bits(byte)
         return {
             "lighting": bits[0],
@@ -70,7 +70,7 @@ class DeviceState:
             "eco": bits[7]
         }
 
-    def parse789(self, byte7: int, byte8: int, byte9: int) -> Dict[str]:
+    def parse789(self, byte7: int, byte8: int, byte9: int) -> Dict[str, Any]:
         bits7 = self.int2bits(byte7)
         bits8 = self.int2bits(byte8)
         bits9 = self.int2bits(byte9)
@@ -94,19 +94,19 @@ class DeviceState:
         }
 
     # noinspection PyMethodMayBeStatic
-    def parse10(self, byte10: int) -> Dict[str]:
+    def parse10(self, byte10: int) -> Dict[str, Any]:
         return {
             "wujiNum": byte10
         }
 
     # noinspection PyMethodMayBeStatic
-    def parse11_12(self, temp_type: int, byte11: int, byte12: int) -> Dict[str]:
+    def parse11_12(self, temp_type: int, byte11: int, byte12: int) -> Dict[str, Any]:
         temp = byte11 + 0.1 * byte12 if temp_type == 0 else byte11 * 1.8 + 32
         return {
             "indoorTemperature": str(temp)
         }
 
-    def parse(self, message: bytes) -> Dict[str]:
+    def parse(self, message: bytes) -> Dict[str, Any]:
         data3 = self.parse3(message[4 + 3])
         data4 = self.parse4(message[4 + 4])
         data5 = self.parse5(message[4 + 5])
