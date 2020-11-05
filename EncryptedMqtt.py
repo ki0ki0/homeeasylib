@@ -1,6 +1,6 @@
 import threading
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Dict
 
 import paho.mqtt.client as mqtt
 from Crypto.Cipher import AES
@@ -22,7 +22,7 @@ class EncryptedMqtt(mqtt.Client):
 
     _on_message_decrypted: Callable[[mqtt.Client, Any, str, bytes, mqtt.MQTTMessage], None]
     _callback_mutex_decrypted: threading.RLock
-    _keys: dict[str, bytes]
+    _keys: Dict[str, bytes]
 
     def __init__(self, client_id="", clean_session=None, userdata=None,
                  protocol=mqtt.MQTTv311, transport="tcp"):
