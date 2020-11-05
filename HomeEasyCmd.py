@@ -46,6 +46,20 @@ class HomeEasyCmd(cmd.Cmd):
         else:
             print("Mac is required.")
 
+    def do_get(self, key: str, mac: str = ''):
+        """update <device mac>
+            Request status update for device."""
+        mac = mac if len(mac) != 0 else self.mac
+        if len(mac) == 0:
+            print("Mac is required.")
+            return
+
+        value = self.lib.get(mac, key)
+        if value is None:
+            print("Device state isn't available(need update), or not valid property")
+        else:
+            print(f"{mac} {key}={value}")
+
     # noinspection PyMethodMayBeStatic
     def do_exit(self):
         """exit
