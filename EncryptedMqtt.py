@@ -1,6 +1,5 @@
 import threading
-from collections.abc import Callable
-from typing import Any, Dict
+from typing import Any, Callable, Dict
 
 import paho.mqtt.client as mqtt
 from Crypto.Cipher import AES
