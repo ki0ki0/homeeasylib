@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 
 
 class DeviceState:
@@ -13,7 +13,7 @@ class DeviceState:
     def get_bit(x: int, b: int) -> int:
         return (x >> (7-b)) & 1
 
-    def int2bits(self, x: int) -> list[int]:
+    def int2bits(self, x: int) -> List[int]:
         return [self.get_bit(x, pos) for pos in range(8)]
 
     def parse3(self, byte: int) -> Dict[str]:
