@@ -23,9 +23,9 @@ class TestEncryptedMqtt(TestCase):
 
     def test_decrypt(self):
         key = "a3d44c718acaead0".encode('utf-8')
-        encrypted = bytes.fromhex('2776bf014dae8a1651994552b19e29969870167b550749d2362953a167fcc778')
+        encrypted = bytes.fromhex('a89488aaa5c79378e354a735e3f5cee2844b526b64d4a97ebf81f1d30e48e1b1')
         mqtt = EncryptedMqtt()
         decrypted = mqtt.decrypt(encrypted, key)
-        expected = bytes([170, 170, 18, 160, 10, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26])
+        expected = bytes.fromhex("aaaa12000a0a000c0700c4000000001c000000006d0000000000000000000000")
         self.assertEqual(expected, decrypted)
 
