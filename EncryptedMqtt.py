@@ -4,6 +4,7 @@ from typing import Any, Callable, Dict
 import paho.mqtt.client as mqtt
 from Crypto.Cipher import AES
 from Crypto.Hash import MD5
+from Crypto.Util.Padding import pad, unpad
 
 from structlog import get_logger
 
@@ -35,7 +36,7 @@ class EncryptedMqtt(mqtt.Client):
         logger.debug("connect", host=host, port=port)
         return super().connect(host, port, keepalive, bind_address, bind_port, clean_start, properties)
 
-    def subscribe(self, mac, topic_prefix='dev/cmd/010202/', qos=0, options=None, properties=None):
+    def subscribe(self, mac, topic_prefix, qos=0, options=None, properties=None):
         topic = topic_prefix + mac
         logger.debug("subscribe", topic=topic)
         super().subscribe(topic)
@@ -66,10 +67,16 @@ class EncryptedMqtt(mqtt.Client):
         self.on_message_decrypted(client, userdata, mac, decrypted, message)
 
     def decrypt(self, enc: bytes, key: bytes) -> bytes:
-        iv = enc[:AES.block_size]
+        iv = key[:AES.block_size]
         cipher = AES.new(key, AES.MODE_CBC, iv)
         dec = cipher.decrypt(enc)
-        return self._unpad(dec)
+        return dec # unpad(dec, AES.block_size)
+
+    @staticmethod
+    def encrypt(data: bytes, key: bytes) -> bytes:
+        iv = key[:AES.block_size]
+        cipher = AES.new(key, AES.MODE_CBC, iv)
+        return cipher.encrypt(pad(data, AES.block_size))
 
     @staticmethod
     def get_key(mac: str) -> bytes:
@@ -83,6 +90,3 @@ class EncryptedMqtt(mqtt.Client):
 
         return result.encode('utf-8')
 
-    @staticmethod
-    def _unpad(s: bytes) -> bytes:
-        return s[:-ord(s[len(s) - 1:])]
