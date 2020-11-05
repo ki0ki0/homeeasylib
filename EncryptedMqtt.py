@@ -6,6 +6,11 @@ import paho.mqtt.client as mqtt
 from Crypto.Cipher import AES
 from Crypto.Hash import MD5
 
+from structlog import get_logger
+
+
+logger = get_logger()
+
 
 # noinspection PyUnusedLocal
 def _on_message_decrypted_stub(client: mqtt.Client, userdata: Any, mac: str, decrypted: bytes,
@@ -28,10 +33,13 @@ class EncryptedMqtt(mqtt.Client):
 
     def connect(self, host="91.196.132.126", port=1883, keepalive=60, bind_address="", bind_port=0,
                 clean_start=mqtt.MQTT_CLEAN_START_FIRST_ONLY, properties=None):
+        logger.debug("connect", host=host, port=port)
         return super().connect(host, port, keepalive, bind_address, bind_port, clean_start, properties)
 
-    def subscribe(self, mac, topic='dev/cmd/010202/', qos=0, options=None, properties=None):
-        super().subscribe(topic + mac)
+    def subscribe(self, mac, topic_prefix='dev/cmd/010202/', qos=0, options=None, properties=None):
+        topic = topic_prefix + mac
+        logger.debug("subscribe", topic=topic)
+        super().subscribe(topic)
         self.on_message = self.on_message_internal
 
     @property
@@ -45,11 +53,17 @@ class EncryptedMqtt(mqtt.Client):
 
     def on_message_internal(self, client, userdata, message):
         mac: str = message.topic.split('/')[-1]
+        logger.debug("message received", topic=message.topic, payload=message.payload.hex())
         if mac not in self._keys:
-            self._keys[mac] = self.get_key(mac)
+            key = self.get_key(mac)
+            logger.debug("key generated", mac=mac, key=key.decode("utf-8"))
+            self._keys[mac] = key
+        else:
+            key = self._keys[mac]
+            logger.debug("key exists", mac=mac, key=key.decode("utf-8"))
 
-        key = self._keys[mac]
         decrypted = self.decrypt(message.payload, key) if len(message.payload) > 0 else message.payload
+        logger.debug("message decrypted", topic=message.topic, decrypted=decrypted.hex())
         self.on_message_decrypted(client, userdata, mac, decrypted, message)
 
     def decrypt(self, enc: bytes, key: bytes) -> bytes:
