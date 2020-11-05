@@ -48,6 +48,7 @@ class TestDeviceStateParser(TestCase):
     def test_parse_1(self):
         parser = DeviceStateParser()
         enc = bytes([170, 170, 18, 0, 10, 10, 0, 4, 6, 0, 196, 0, 0, 0, 60, 22, 0, 0, 0, 0, 154])
-        state = DeviceState(RunMode.Hot, False, WindLevel.l0, 0, 0, True, True, False, False, False, time(0, 0), False, time(0, 0), 22.0, WindMode.l0)
+        state = DeviceState(RunMode.Hot, False, WindLevel.l0, False, False, False, 22, 0, 0, True, True, True, False, 1,
+                            False, False, False, time(0, 0), False, time(0, 0), 60, 22.0, WindMode.l0)
         parse = parser.parse(enc)
         self.assertEqual(state, parse)

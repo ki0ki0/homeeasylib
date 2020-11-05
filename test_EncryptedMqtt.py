@@ -1,7 +1,4 @@
 from unittest import TestCase
-
-from Crypto.Cipher import AES
-
 from EncryptedMqtt import EncryptedMqtt
 
 

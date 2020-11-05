@@ -24,23 +24,26 @@ class HomeEasyLib():
         state = DeviceStateParser()
         if len(decrypted) == 0:
             return
-        # st = state.parse2dict(decrypted)
-        # logger.info("State received", state=st)
+        #st = state.parse2dict(decrypted)
+        #logger.info("State received", state=st)
         st = state.parse(decrypted)
         logger.info("State received", mac=mac, state=st)
 
     def receive(self, mac, topic_prefix='dev/status/010202/'):
         self.mqtt.on_message_decrypted = self.on_message
-        self.mqtt.connect()
-        self.mqtt.subscribe(mac, topic_prefix)
+        self.mqtt.connect("91.196.132.126")
+        topic = topic_prefix + mac
+        self.mqtt.subscribe(topic)
         self.mqtt.loop_start()
+
+    def receive_cmds(self, mac, topic_prefix='dev/cmd/010202/'):
+        topic = topic_prefix + mac
+        self.mqtt.subscribe(topic)
 
     def stop(self):
         self.mqtt.loop_stop()
         self.mqtt.disconnect()
 
     def request_status(self, mac, topic_prefix='dev/cmd/010202/'):
-        b = bytes([170, 170, 18, 160, 10, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26])
-        key = EncryptedMqtt.get_key(mac)
-        encrypted = self.mqtt.encrypt(b, key)
-        self.mqtt.publish(topic_prefix + mac, encrypted)
+        data = bytes([170, 170, 18, 160, 10, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26])
+        self.mqtt.publish(topic_prefix + mac, data)

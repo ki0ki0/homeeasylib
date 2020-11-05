@@ -36,25 +36,25 @@ class WindMode(Enum):
 @dataclass
 class DeviceState:
     runMode: RunMode
-    boot: bool
+    boot: bool # is Enabled
     windLevel: WindLevel
-    # cpmode: int
-    # mute: int
-    # temtyp: int
-    # wdNumber: int
+    cpmode: bool
+    mute: bool
+    temtyp: bool
+    wdNumber: int # target temperature
     windLR: int
     windTB: int
     lighting: bool
     healthy: bool
-    # timingMode: int
-    # dryingmode: int
-    # wdNumberMode: str
+    timingMode: bool
+    dryingmode: bool
+    wdNumberMode: int
     sleep: bool
     eco: bool
     bootEnabled: bool
     bootTime: time
     shutEnabled: bool
     shutTime: time
-    # wujiNum: str
+    wujiNum: int
     indoorTemperature: float
     windMode: WindMode

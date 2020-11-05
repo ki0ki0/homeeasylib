@@ -19,6 +19,7 @@ if __name__ == '__main__':
     lib = HomeEasyLib()
     if mac is not None:
         lib.receive(mac)
+        lib.receive_cmds(mac)
         lib.request_status(mac)
     else:
         lib.receive('#', "dev/status/")

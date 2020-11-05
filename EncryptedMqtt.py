@@ -31,16 +31,11 @@ class EncryptedMqtt(mqtt.Client):
         self._callback_mutex_decrypted = threading.RLock()
         self._on_message_decrypted = _on_message_decrypted_stub
 
-    def connect(self, host="91.196.132.126", port=1883, keepalive=60, bind_address="", bind_port=0,
-                clean_start=mqtt.MQTT_CLEAN_START_FIRST_ONLY, properties=None):
-        logger.debug("connect", host=host, port=port)
-        return super().connect(host, port, keepalive, bind_address, bind_port, clean_start, properties)
-
-    def subscribe(self, mac, topic_prefix, qos=0, options=None, properties=None):
-        topic = topic_prefix + mac
-        logger.debug("subscribe", topic=topic)
-        super().subscribe(topic)
-        self.on_message = self.on_message_internal
+    def publish(self, topic, payload=None, qos=0, retain=False, properties=None):
+        mac: str = self.mac_from_topic(topic)
+        key = self.key_for_mac(mac)
+        encrypted = self.encrypt(payload, key)
+        return super().publish(topic, encrypted, qos, retain, properties)
 
     @property
     def on_message_decrypted(self):
@@ -49,11 +44,19 @@ class EncryptedMqtt(mqtt.Client):
     @on_message_decrypted.setter
     def on_message_decrypted(self, func: Callable[[mqtt.Client, Any, str, bytes, mqtt.MQTTMessage], None]):
         with self._callback_mutex_decrypted:
+            self.on_message = self.on_message_internal
             self._on_message_decrypted = func
 
     def on_message_internal(self, client, userdata, message):
-        mac: str = message.topic.split('/')[-1]
         logger.debug("message received", topic=message.topic, payload=message.payload.hex())
+        mac: str = self.mac_from_topic(message.topic)
+        key = self.key_for_mac(mac)
+
+        decrypted = self.decrypt(message.payload, key) if len(message.payload) > 0 else message.payload
+        logger.debug("message decrypted", topic=message.topic, decrypted=decrypted.hex())
+        self.on_message_decrypted(client, userdata, mac, decrypted, message)
+
+    def key_for_mac(self, mac):
         if mac not in self._keys:
             key = self.get_key(mac)
             logger.debug("key generated", mac=mac, key=key.decode("utf-8"))
@@ -61,10 +64,10 @@ class EncryptedMqtt(mqtt.Client):
         else:
             key = self._keys[mac]
             logger.debug("key exists", mac=mac, key=key.decode("utf-8"))
+        return key
 
-        decrypted = self.decrypt(message.payload, key) if len(message.payload) > 0 else message.payload
-        logger.debug("message decrypted", topic=message.topic, decrypted=decrypted.hex())
-        self.on_message_decrypted(client, userdata, mac, decrypted, message)
+    def mac_from_topic(self, topic):
+        return topic.split('/')[-1]
 
     def decrypt(self, enc: bytes, key: bytes) -> bytes:
         iv = key[:AES.block_size]
