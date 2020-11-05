@@ -1,7 +1,12 @@
 from datetime import time
 from typing import Dict, List, Any
 
+from structlog import get_logger
+
 from DeviceState import DeviceState, WindLevel, RunMode, WindMode
+
+
+logger = get_logger()
 
 
 class DeviceStateParser:
@@ -130,6 +135,7 @@ class DeviceStateParser:
 
     def parse(self, message: bytes) -> DeviceState:
         parse = self.parse2dict(message)
+        logger.debug("State received", stateDict=parse)
         state = DeviceState(RunMode(int(parse["runMode"], 2)),
                             bool(parse['boot']),
                             WindLevel(int(parse["windLevel"], 2)),
