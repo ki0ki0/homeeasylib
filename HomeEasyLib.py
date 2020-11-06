@@ -77,7 +77,8 @@ class HomeEasyLib:
         if mac not in self.statuses:
             return None
         status = self.statuses[mac]
-        return getattr(status, key)
+        attr = getattr(status, key)
+        return attr
 
     def set(self, mac: str, key: str, value: Any) -> Any:
         if mac not in self.statuses:

@@ -7,6 +7,7 @@ from DeviceState import DeviceState, RunMode, WindLevel
 
 class TestDeviceState(TestCase):
     data = bytes([170, 170, 18, 0, 10, 10, 0, 12, 7, 0, 196, 0, 0, 0, 0, 22, 5, 0, 0, 0, 108])
+
     # {"runMode": "100", "boot": 1, "windLevel": "000", "cpmode": 0, "mute": 0, "temtyp": 0, "wdNumber": 23,
     #  "windLR": "0000", "windTB": "0000", "lighting": 1, "healthy": 1, "timingMode": 0, "dryingmode": 0,
     #  "wdNumberMode": "01", "sleep": 0, "eco": 0, "bootEnabled": 0, "bootTime": "00:00", "shutEnabled": 0,
@@ -103,12 +104,12 @@ class TestDeviceState(TestCase):
 
     def test_timingMode(self):
         self.assertEqual(0, DeviceState(self.data).timingMode)
-    
+
     def test_timingMode_set(self):
         state = DeviceState(self.data)
         state.timingMode = 3
         self.assertEqual(3, state.timingMode)
-    
+
     def test_dryingmode(self):
         self.assertEqual(False, DeviceState(self.data).dryingmode)
 
@@ -140,23 +141,23 @@ class TestDeviceState(TestCase):
         state = DeviceState(self.data)
         state.eco = True
         self.assertEqual(True, state.eco)
-        
+
     def test_bootEnabled(self):
         self.assertEqual(False, DeviceState(self.data).bootEnabled)
-    
+
     def test_bootEnabled_set(self):
         state = DeviceState(self.data)
         state.bootEnabled = True
         self.assertEqual(True, state.bootEnabled)
-    
+
     def test_bootTime(self):
         self.assertEqual(time(0, 0), DeviceState(self.data).bootTime)
-    
+
     def test_bootTime_set(self):
         state = DeviceState(self.data)
         state.bootTime = time(10, 12)
         self.assertEqual(time(10, 12), state.bootTime)
-    
+
     def test_shutEnabled(self):
         self.assertEqual(False, DeviceState(self.data).shutEnabled)
 
@@ -167,12 +168,12 @@ class TestDeviceState(TestCase):
 
     def test_shutTime(self):
         self.assertEqual(time(0, 0), DeviceState(self.data).shutTime)
-    
+
     def test_shutTime_set(self):
         state = DeviceState(self.data)
         state.shutTime = time(17, 18)
         self.assertEqual(time(17, 18), state.shutTime)
-    
+
     def test_wujiNum(self):
         self.assertEqual(0, DeviceState(self.data).wujiNum)
 
@@ -192,3 +193,13 @@ class TestDeviceState(TestCase):
         state = DeviceState(self.data)
         state.windMode = 7
         self.assertEqual(7, state.windMode)
+
+    def test_cmd(self):
+        expeted = b'\xaa\xaa\x12\x01\n\n\x00\x0c\x07\x00\xc4\x00\x00\x00\x00\x16\x05\x00\x00\x00m'
+        self.assertEqual(expeted, DeviceState(self.data).cmd)
+
+    def test_cmd1(self):
+        expeted = b'\xaa\xaa\x12\x01\n\n\x00\x0c\x07\x00\xc4\x00\x00\x00\x00\x16\x05\x00\x00\x00m'
+        state = DeviceState(self.data)
+        state.mute = True
+        self.assertEqual(expeted, state.cmd)

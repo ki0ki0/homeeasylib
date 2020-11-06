@@ -66,7 +66,9 @@ class DeviceState:
 
     def _set_state_bit(self, byte_pos: int, bit_pos: int, val: bool):
         byte_pos = byte_pos + 4  # offset on header size
-        self.bits[byte_pos * 8 + bit_pos] = val
+        if type(val) is str:
+            val = False if val == 'False' or val == 'false' else True
+        self.bits[byte_pos * 8 + bit_pos] = bool(val)
 
     def _get_state_bits(self, x: int, y: int, count: int):
         val = 0
@@ -76,13 +78,13 @@ class DeviceState:
         return val
 
     def _set_state_bits(self, x: int, y: int, count: int, val: int):
+        ival = int(val)
         size = 8 * int((count / 8 + (1 if count % 8 > 0 else 0)))
-        range_ = [self._get_bit(val, i, size) for i in range(size)]
+        range_ = [self._get_bit(ival, i, size) for i in range(size)]
         bits = range_[-count:]
 
         for i in range(count):
             self._set_state_bit(x, y + i, bool(bits[i]))
-        return val
 
     # noinspection PyMethodMayBeStatic
     def _create_chunks(self, list_name, n):
@@ -268,6 +270,8 @@ class DeviceState:
 
     @bootTime.setter
     def bootTime(self, value: time):
+        if type(value) is str:
+            value = time.fromisoformat(value)
         val = value.hour * 60 + value.minute
         self._set_state_bits(7, 0, 11, val)
             
@@ -290,6 +294,8 @@ class DeviceState:
 
     @shutTime.setter
     def shutTime(self, value: time):
+        if type(value) is str:
+            value = time.fromisoformat(value)
         val = value.hour * 60 + value.minute
         val_l = val & 0xff
         val_h = (val >> 8) & 0xff

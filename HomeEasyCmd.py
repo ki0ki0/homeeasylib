@@ -68,7 +68,11 @@ class HomeEasyCmd(cmd.Cmd):
             print("Mac is required.")
             return
 
-        value = self.lib.get(mac, key)
+        try:
+            value = self.lib.get(mac, key)
+        except AttributeError:
+            print(f"Invalid property {key}.")
+
         if value is None:
             print("Device state isn't available(need update), or not valid property")
         else:
@@ -93,12 +97,15 @@ class HomeEasyCmd(cmd.Cmd):
             print("Mac is required.")
             return
 
-        old = self.lib.get(mac, key)
-        if old is None:
-            print("Device state isn't available(need update), or not valid property")
-            return
+        try:
+            old = self.lib.get(mac, key)
+            if old is None:
+                print("Device state isn't available(need update), or not valid property")
+                return
 
-        self.lib.set(mac, key, val)
+            self.lib.set(mac, key, val)
+        except AttributeError:
+            print(f"Invalid property {key}.")
 
     # noinspection PyMethodMayBeStatic
     def do_exit(self, line: str):
