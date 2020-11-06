@@ -4,7 +4,6 @@ import paho.mqtt.client as mqtt
 from structlog import get_logger
 
 from DeviceState import DeviceState
-from DeviceStateParser import DeviceStateParser
 from EncryptedMqtt import EncryptedMqtt
 
 
@@ -26,12 +25,11 @@ class HomeEasyLib:
         self.mqtt.loop_start()
 
     # noinspection PyMethodMayBeStatic
-    def on_message(self, client: mqtt.Client, userdata: Any, mac: str, decrypted: bytes, message: mqtt.MQTTMessage):
+    def on_message(self, _client: mqtt.Client, _userdata: Any, mac: str, decrypted: bytes, message: mqtt.MQTTMessage):
         logger.debug("message received", topic=message.topic, payload=message.payload.hex(), decrypted=decrypted.hex())
         if len(decrypted) == 0:
             return
-        parser = DeviceStateParser()
-        state = parser.parse(decrypted)
+        state = DeviceState(decrypted)
         logger.info("state received", topic=message.topic, state=state)
         if 'dev/status/' in message.topic:
             self.statuses[mac] = state
@@ -58,9 +56,23 @@ class HomeEasyLib:
         self.mqtt.subscribe(status_topic_prefix + mac)
         self.mqtt.publish(cmd_topic_prefix + mac, data)
 
-    def get(self, mac: str, key: str):
-        if mac in self.statuses:
-            status = self.statuses[mac]
-            return getattr(status, key)
+    def send(self, mac: str, topic_prefix: str = 'dev/cmd/010202/'):
+        if mac not in self.statuses:
+            return None
+        status = self.statuses[mac]
+        self.mqtt.publish(topic_prefix + mac, status.cmd)
 
-        return None
+    def get(self, mac: str, key: str) -> Any:
+        if mac not in self.statuses:
+            return None
+        status = self.statuses[mac]
+        return getattr(status, key)
+
+    def set(self, mac: str, key: str, value: Any) -> Any:
+        if mac not in self.statuses:
+            return None
+        status = self.statuses[mac]
+        old = getattr(status, key)
+
+        setattr(status, key, value)
+        return old

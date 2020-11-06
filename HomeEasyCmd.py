@@ -1,4 +1,5 @@
 import cmd
+from typing import Any
 
 from structlog import get_logger
 
@@ -38,7 +39,7 @@ class HomeEasyCmd(cmd.Cmd):
             self.lib.dump_cmd('#', "dev/cmd/")
 
     def do_update(self, mac: str):
-        """update <device mac>
+        """update [device mac]
             Request status update for device."""
         mac = mac if len(mac) != 0 else self.mac
         if len(mac) != 0:
@@ -46,9 +47,19 @@ class HomeEasyCmd(cmd.Cmd):
         else:
             print("Mac is required.")
 
+    def do_send(self, mac: str = ''):
+        """send [device mac]
+            Get status value for device."""
+        mac = mac if len(mac) != 0 else self.mac
+        if len(mac) == 0:
+            print("Mac is required.")
+            return
+
+        self.lib.send(mac)
+
     def do_get(self, key: str, mac: str = ''):
-        """update <device mac>
-            Request status update for device."""
+        """get <key> [device mac]
+            Get status value for device."""
         mac = mac if len(mac) != 0 else self.mac
         if len(mac) == 0:
             print("Mac is required.")
@@ -59,6 +70,21 @@ class HomeEasyCmd(cmd.Cmd):
             print("Device state isn't available(need update), or not valid property")
         else:
             print(f"{mac} {key}={value}")
+
+    def do_set(self, key: str, value: Any = True, mac: str = ''):
+        """update <device mac>
+            Set status value for device."""
+        mac = mac if len(mac) != 0 else self.mac
+        if len(mac) == 0:
+            print("Mac is required.")
+            return
+
+        old = self.lib.get(mac, key)
+        if old is None:
+            print("Device state isn't available(need update), or not valid property")
+            return
+
+        self.lib.set(mac, key, value)
 
     # noinspection PyMethodMayBeStatic
     def do_exit(self):
@@ -80,6 +106,3 @@ class HomeEasyCmd(cmd.Cmd):
     def postloop(self) -> None:
         self.lib.disconnect()
         super().postloop()
-
-
-

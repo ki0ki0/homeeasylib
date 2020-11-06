@@ -66,14 +66,16 @@ class EncryptedMqtt(mqtt.Client):
             logger.debug("key exists", mac=mac, key=key.decode("utf-8"))
         return key
 
+    # noinspection PyMethodMayBeStatic
     def mac_from_topic(self, topic):
         return topic.split('/')[-1]
 
+    # noinspection PyMethodMayBeStatic
     def decrypt(self, enc: bytes, key: bytes) -> bytes:
         iv = key[:AES.block_size]
         cipher = AES.new(key, AES.MODE_CBC, iv)
         dec = cipher.decrypt(enc)
-        return dec # unpad(dec, AES.block_size)
+        return dec  # unpad(dec, AES.block_size)
 
     @staticmethod
     def encrypt(data: bytes, key: bytes) -> bytes:
@@ -92,4 +94,3 @@ class EncryptedMqtt(mqtt.Client):
         result = h.hexdigest()[8: 24]
 
         return result.encode('utf-8')
-

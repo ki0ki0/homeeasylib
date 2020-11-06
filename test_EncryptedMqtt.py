@@ -25,4 +25,3 @@ class TestEncryptedMqtt(TestCase):
         decrypted = mqtt.decrypt(encrypted, key)
         expected = bytes.fromhex("aaaa12000a0a000c0700c4000000001c000000006d0000000000000000000000")
         self.assertEqual(expected, decrypted)
-
