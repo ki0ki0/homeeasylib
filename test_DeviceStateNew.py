@@ -1,3 +1,4 @@
+import unittest
 from datetime import time
 from unittest import TestCase
 
@@ -62,6 +63,7 @@ class TestDeviceState(TestCase):
     def test_wdNumber(self):
         self.assertEqual(23, DeviceState(self.data).wdNumber)
 
+    @unittest.skip("not implemented yet")
     def test_wdNumber_set(self):
         state = DeviceState(self.data)
         state.wdNumber = 17
@@ -184,7 +186,8 @@ class TestDeviceState(TestCase):
 
     def test_windMode(self):
         self.assertEqual(0, DeviceState(self.data).windMode)
-    
+
+    @unittest.skip("not implemented yet")
     def test_windMode_set(self):
         state = DeviceState(self.data)
         state.windMode = 7

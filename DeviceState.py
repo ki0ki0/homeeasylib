@@ -152,7 +152,7 @@ class DeviceState:
             
     @property
     def wdNumber(self) -> int:  # target temperature
-        wen = self.get_state_bit(4, 5)
+        wen = self.get_state_bits(4, 3, 5)
         wen = wen - 16 if wen >= 16 else wen
         wd_number = wen + 16 if wen > 0 else 16
         return wd_number
@@ -277,7 +277,6 @@ class DeviceState:
         val_h = (val >> 8) & 0xff
         self.set_state_bits(7, 1, 3, val_h)
         self.set_state_bits(9, 0, 8, val_l)
-        pass
             
     @property
     def wujiNum(self) -> int:
