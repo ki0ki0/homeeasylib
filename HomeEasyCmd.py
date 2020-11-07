@@ -11,6 +11,11 @@ class HomeEasyCmd(cmd.Cmd):
 
     lib: HomeEasyLib
     mac: str = ''
+    lib = HomeEasyLib()
+    lib.connect()
+    prompt = "HomeEasyCmd>"
+    intro = 'HomeEasy HVAC command tool. Type "help" to get some help.'
+
 
     def do_mac(self, mac: str):
         """mac <device mac>
@@ -118,10 +123,6 @@ class HomeEasyCmd(cmd.Cmd):
         return True
 
     def preloop(self) -> None:
-        self.lib = HomeEasyLib()
-        self.lib.connect()
-        self.prompt = "HomeEasyCmd>"
-        self.intro = 'HomeEasy HVAC command tool. Type "help" to get some help.'
         super().preloop()
 
     def postloop(self) -> None:
