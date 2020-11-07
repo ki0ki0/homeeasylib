@@ -30,7 +30,7 @@ class TestDeviceState(TestCase):
         self.assertEqual(False, state.boot)
 
     def test_wind_level(self):
-        self.assertEqual(WindLevel.l0, DeviceState(self.data).windLevel)
+        self.assertEqual(WindLevel.Auto, DeviceState(self.data).windLevel)
 
     def test_wind_level_set(self):
         state = DeviceState(self.data)
@@ -58,8 +58,8 @@ class TestDeviceState(TestCase):
 
     def test_temtyp_set(self):
         state = DeviceState(self.data)
-        state.temtyp = 2
-        self.assertEqual(2, state.temtyp)
+        state.temtyp = True
+        self.assertEqual(True, state.temtyp)
 
     def test_wdNumber(self):
         self.assertEqual(23, DeviceState(self.data).wdNumber)
@@ -107,8 +107,8 @@ class TestDeviceState(TestCase):
 
     def test_timingMode_set(self):
         state = DeviceState(self.data)
-        state.timingMode = 3
-        self.assertEqual(3, state.timingMode)
+        state.timingMode = True
+        self.assertEqual(True, state.timingMode)
 
     def test_dryingmode(self):
         self.assertEqual(False, DeviceState(self.data).dryingmode)
@@ -197,9 +197,3 @@ class TestDeviceState(TestCase):
     def test_cmd(self):
         expeted = b'\xaa\xaa\x12\x01\n\n\x00\x0c\x07\x00\xc4\x00\x00\x00\x00\x16\x05\x00\x00\x00m'
         self.assertEqual(expeted, DeviceState(self.data).cmd)
-
-    def test_cmd1(self):
-        expeted = b'\xaa\xaa\x12\x01\n\n\x00\x0c\x07\x00\xc4\x00\x00\x00\x00\x16\x05\x00\x00\x00m'
-        state = DeviceState(self.data)
-        state.mute = True
-        self.assertEqual(expeted, state.cmd)

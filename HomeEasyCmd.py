@@ -77,6 +77,7 @@ class HomeEasyCmd(cmd.Cmd):
             value = self.lib.get(mac, key)
         except AttributeError:
             print(f"Invalid property {key}.")
+            return
 
         if value is None:
             print("Device state isn't available(need update), or not valid property")

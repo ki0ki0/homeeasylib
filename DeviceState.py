@@ -6,13 +6,13 @@ from typing import List
 class RunMode(IntEnum):
     Auto = 0
     Cool = 1
-    Chushi = 2
+    Dry = 2
     Wind = 3
     Hot = 4
 
 
 class WindLevel(IntEnum):
-    l0 = 0
+    Auto = 0  # Auto
     l1 = 1
     l2 = 2
     l3 = 3
@@ -22,15 +22,37 @@ class WindLevel(IntEnum):
 
 
 class WindMode(IntEnum):
-    l0 = 0
+    Auto = 0  # Auto
     l1 = 1
     l2 = 2
     l3 = 3
     l4 = 4
     l5 = 5
     l6 = 6
-    Cp = 7
-    Mute = 8
+    Quite = 7
+    Turbo = 8  # Turbo
+
+
+class WindLRMode(IntEnum):
+    Stop = 0
+    Cycle = 1
+    Left = 2
+    Left_Center = 3
+    Center = 4
+    Right_Center = 5
+    Right = 6
+    Left_Right = 12
+    Cycle_Symmetrically = 13
+
+
+class WindTBMode(IntEnum):
+    Stop = 0
+    Cycle = 1
+    Top = 2
+    l3 = 3
+    Center = 4
+    l5 = 5
+    Bottom = 6
 
 
 # noinspection PyPep8Naming
@@ -147,7 +169,7 @@ class DeviceState:
         self._set_state_bits(3, 1, 3, int(value))
             
     @property
-    def cpmode(self) -> bool:
+    def cpmode(self) -> bool:  # Turbo
         return self._get_state_bit(3, 0)
 
     @cpmode.setter
@@ -222,7 +244,7 @@ class DeviceState:
         self._set_state_bit(6, 2, value)
             
     @property
-    def dryingmode(self) -> bool:
+    def dryingmode(self) -> bool:  # Auxiliary heater (on, hot), Drying(off, cool or dry)
         return self._get_state_bit(6, 3)
 
     @dryingmode.setter
@@ -255,15 +277,17 @@ class DeviceState:
             
     @property
     def bootEnabled(self) -> bool:
-        return self._get_state_bit(7, 0)
+        return self._get_state_bit(7, 4)
 
     @bootEnabled.setter
     def bootEnabled(self, value: bool):
-        self._set_state_bit(7, 0, value)
+        self._set_state_bit(7, 4, value)
             
     @property
     def bootTime(self) -> time:
-        val = self._get_state_bits(7, 0, 11)
+        val_h = self._get_state_bits(7, 5, 3)
+        val_l = self._get_state_bits(9, 0, 8)
+        val = (val_h << 8) + val_l
         v_hour = int(val / 60)
         v_min = int(val % 60)
         return time(v_hour, v_min)
@@ -273,15 +297,18 @@ class DeviceState:
         if type(value) is str:
             value = time.fromisoformat(value)
         val = value.hour * 60 + value.minute
-        self._set_state_bits(7, 0, 11, val)
+        val_l = val & 0xff
+        val_h = (val >> 8) & 0xff
+        self._set_state_bits(7, 5, 3, val_h)
+        self._set_state_bits(9, 0, 8, val_l)
             
     @property
     def shutEnabled(self) -> bool:
-        return self._get_state_bit(7, 4)
+        return self._get_state_bit(7, 0)
 
     @shutEnabled.setter
     def shutEnabled(self, value: bool):
-        self._set_state_bit(7, 4, value)
+        self._set_state_bit(7, 0, value)
             
     @property
     def shutTime(self) -> time:
