@@ -2,7 +2,7 @@ import unittest
 from datetime import time
 from unittest import TestCase
 
-from DeviceState import DeviceState, RunMode, WindLevel
+from DeviceState import DeviceState, Mode, FanSpeed
 
 
 class TestDeviceState(TestCase):
@@ -14,85 +14,85 @@ class TestDeviceState(TestCase):
     #  "shutTime": "00:00", "wujiNum": 0, "indoorTemperature": "22.5", "windMode": 0}
 
     def test_run_mode(self):
-        self.assertEqual(RunMode.Hot, DeviceState(self.data).runMode)
+        self.assertEqual(Mode.Heat, DeviceState(self.data).mode)
 
     def test_run_mode_set(self):
         state = DeviceState(self.data)
-        state.runMode = RunMode.Wind
-        self.assertEqual(RunMode.Wind, state.runMode)
+        state.mode = Mode.Fan
+        self.assertEqual(Mode.Fan, state.mode)
 
     def test_boot(self):
-        self.assertEqual(True, DeviceState(self.data).boot)
+        self.assertEqual(True, DeviceState(self.data).power)
 
     def test_boot_set(self):
         state = DeviceState(self.data)
-        state.boot = False
-        self.assertEqual(False, state.boot)
+        state.power = False
+        self.assertEqual(False, state.power)
 
     def test_wind_level(self):
-        self.assertEqual(WindLevel.Auto, DeviceState(self.data).windLevel)
+        self.assertEqual(FanSpeed.Auto, DeviceState(self.data).fanSpeed)
 
     def test_wind_level_set(self):
         state = DeviceState(self.data)
-        state.windLevel = WindLevel.l5
-        self.assertEqual(WindLevel.l5, state.windLevel)
+        state.fanSpeed = FanSpeed.l5
+        self.assertEqual(FanSpeed.l5, state.fanSpeed)
 
     def test_cpmode(self):
-        self.assertEqual(False, DeviceState(self.data).cpmode)
+        self.assertEqual(False, DeviceState(self.data).turbo)
 
     def test_cpmode_set(self):
         state = DeviceState(self.data)
-        state.cpmode = True
-        self.assertEqual(True, state.cpmode)
+        state.turbo = True
+        self.assertEqual(True, state.turbo)
 
     def test_mute(self):
-        self.assertEqual(False, DeviceState(self.data).mute)
+        self.assertEqual(False, DeviceState(self.data).quite)
 
     def test_mute_set(self):
         state = DeviceState(self.data)
-        state.mute = True
-        self.assertEqual(True, state.boot)
+        state.quite = True
+        self.assertEqual(True, state.power)
 
     def test_temtyp(self):
-        self.assertEqual(0, DeviceState(self.data).temtyp)
+        self.assertEqual(0, DeviceState(self.data).temperatureScale)
 
     def test_temtyp_set(self):
         state = DeviceState(self.data)
-        state.temtyp = True
-        self.assertEqual(True, state.temtyp)
+        state.temperatureScale = True
+        self.assertEqual(True, state.temperatureScale)
 
     def test_wdNumber(self):
-        self.assertEqual(23, DeviceState(self.data).wdNumber)
+        self.assertEqual(23, DeviceState(self.data).desiredTemperature)
 
     @unittest.skip("not implemented yet")
     def test_wdNumber_set(self):
         state = DeviceState(self.data)
-        state.wdNumber = 17
-        self.assertEqual(17, state.wdNumber)
+        state.desiredTemperature = 17
+        self.assertEqual(17, state.desiredTemperature)
 
     def test_windLR(self):
-        self.assertEqual(0, DeviceState(self.data).windLR)
+        self.assertEqual(0, DeviceState(self.data).horizontalMode)
 
     def test_windLR_set(self):
         state = DeviceState(self.data)
-        state.windLR = 3
-        self.assertEqual(3, state.windLR)
+        state.horizontalMode = 3
+        self.assertEqual(3, state.horizontalMode)
 
     def test_windTB(self):
-        self.assertEqual(0, DeviceState(self.data).windTB)
+        self.assertEqual(0, DeviceState(self.data).verticalFlowMode)
 
     def test_windTB_set(self):
         state = DeviceState(self.data)
-        state.windTB = 3
-        self.assertEqual(3, state.windTB)
+        state.verticalFlowMode = 3
+        self.assertEqual(3, state.verticalFlowMode)
 
     def test_lighting(self):
-        self.assertEqual(True, DeviceState(self.data).lighting)
+        self.assertEqual(True, DeviceState(self.data).display)
 
     def test_lighting_set(self):
         state = DeviceState(self.data)
-        state.lighting = False
-        self.assertEqual(False, state.lighting)
+        state.display = False
+        self.assertEqual(False, state.display)
 
     def test_healthy(self):
         self.assertEqual(True, DeviceState(self.data).healthy)
@@ -111,12 +111,12 @@ class TestDeviceState(TestCase):
         self.assertEqual(True, state.timingMode)
 
     def test_dryingmode(self):
-        self.assertEqual(False, DeviceState(self.data).dryingmode)
+        self.assertEqual(False, DeviceState(self.data).dryingMode)
 
     def test_dryingmode_set(self):
         state = DeviceState(self.data)
-        state.dryingmode = True
-        self.assertEqual(True, state.dryingmode)
+        state.dryingMode = True
+        self.assertEqual(True, state.dryingMode)
 
     def test_wdNumberMode(self):
         self.assertEqual(1, DeviceState(self.data).wdNumberMode)
@@ -186,14 +186,19 @@ class TestDeviceState(TestCase):
         self.assertEqual(22.5, DeviceState(self.data).indoorTemperature)
 
     def test_windMode(self):
-        self.assertEqual(0, DeviceState(self.data).windMode)
+        self.assertEqual(0, DeviceState(self.data).fanMode)
 
     @unittest.skip("not implemented yet")
     def test_windMode_set(self):
         state = DeviceState(self.data)
-        state.windMode = 7
-        self.assertEqual(7, state.windMode)
+        state.fanMode = 7
+        self.assertEqual(7, state.fanMode)
 
     def test_cmd(self):
-        expeted = b'\xaa\xaa\x12\x01\n\n\x00\x0c\x07\x00\xc4\x00\x00\x00\x00\x16\x05\x00\x00\x00m'
-        self.assertEqual(expeted, DeviceState(self.data).cmd)
+        expected = b'\xaa\xaa\x12\x01\n\n\x00\x0c\x07\x00\xc4\x00\x00\x00\x00\x16\x05\x00\x00\x00m'
+        self.assertEqual(expected, DeviceState(self.data).cmd)
+
+    @unittest.skip("debug only")
+    def test_str(self):
+        s = str(DeviceState(self.data))
+        self.assertEqual('', s)

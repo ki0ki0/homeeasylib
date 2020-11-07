@@ -1,18 +1,18 @@
 from datetime import time
-from enum import IntEnum
+from enum import IntEnum, Enum
 from typing import List
 
 
-class RunMode(IntEnum):
+class Mode(IntEnum):
     Auto = 0
     Cool = 1
     Dry = 2
-    Wind = 3
-    Hot = 4
+    Fan = 3
+    Heat = 4
 
 
-class WindLevel(IntEnum):
-    Auto = 0  # Auto
+class FanSpeed(IntEnum):
+    Auto = 0
     l1 = 1
     l2 = 2
     l3 = 3
@@ -21,8 +21,8 @@ class WindLevel(IntEnum):
     l6 = 6
 
 
-class WindMode(IntEnum):
-    Auto = 0  # Auto
+class FanMode(IntEnum):
+    Auto = 0
     l1 = 1
     l2 = 2
     l3 = 3
@@ -30,29 +30,34 @@ class WindMode(IntEnum):
     l5 = 5
     l6 = 6
     Quite = 7
-    Turbo = 8  # Turbo
+    Turbo = 8
 
 
-class WindLRMode(IntEnum):
+class HorizontalFlowMode(IntEnum):
     Stop = 0
-    Cycle = 1
+    Swing = 1
     Left = 2
     Left_Center = 3
     Center = 4
     Right_Center = 5
     Right = 6
     Left_Right = 12
-    Cycle_Symmetrically = 13
+    Swing_Wide = 13
 
 
-class WindTBMode(IntEnum):
+class VerticalFlowMode(IntEnum):
     Stop = 0
-    Cycle = 1
+    Swing = 1
     Top = 2
-    l3 = 3
+    Top_Center = 3
     Center = 4
-    l5 = 5
+    Bottom_Center = 5
     Bottom = 6
+
+
+class TemperatureScale(IntEnum):
+    Celsius = 0
+    Fahrenheit = 1
 
 
 # noinspection PyPep8Naming
@@ -89,7 +94,8 @@ class DeviceState:
     def _set_state_bit(self, byte_pos: int, bit_pos: int, val: bool):
         byte_pos = byte_pos + 4  # offset on header size
         if type(val) is str:
-            val = False if val == 'False' or val == 'false' else True
+            val_s = str(val).lower()
+            val = False if val_s== 'false' or val_s == '0' else True
         self.bits[byte_pos * 8 + bit_pos] = bool(val)
 
     def _get_state_bits(self, x: int, y: int, count: int):
@@ -113,14 +119,20 @@ class DeviceState:
         for i in range(0, len(list_name), n):
             yield list_name[i:i + n]
 
+    def _get_val(self, i):
+        val = getattr(self, i)
+        if issubclass(type(val), Enum):
+            val = f'{val.name}({val})'
+        return val
+
     def __repr__(self):
         keys = [i for i in dir(self) if not i.startswith('_')]
         skip = ['bits', 'cmd', 'raw']
         filtered = [key for key in keys if key not in skip]
-        chunks = self._create_chunks(filtered, 7)
+        chunks = self._create_chunks(filtered, 6)
 
-        in_filtered = [', '.join([f'{i}: {getattr(self, i)}' for i in j]) for j in chunks]
-        out = ',\n'.join(in_filtered)
+        chunks_with_vals = [', '.join([f'{i}: {self._get_val(i)}' for i in j]) for j in chunks]
+        out = ',\n'.join(chunks_with_vals)
         return out
 
     def __str__(self):
@@ -145,86 +157,86 @@ class DeviceState:
         return bytes(bits_bytes)
 
     @property
-    def runMode(self) -> RunMode:
-        return RunMode(self._get_state_bits(3, 5, 3))
+    def mode(self) -> Mode:
+        return Mode(self._get_state_bits(3, 5, 3))
 
-    @runMode.setter
-    def runMode(self, value: RunMode):
+    @mode.setter
+    def mode(self, value: Mode):
         self._set_state_bits(3, 5, 3, int(value))
             
     @property
-    def boot(self) -> bool:
+    def power(self) -> bool:
         return self._get_state_bit(3, 4)
 
-    @boot.setter
-    def boot(self, value: bool):
+    @power.setter
+    def power(self, value: bool):
         self._set_state_bit(3, 4, value)
             
     @property
-    def windLevel(self) -> WindLevel:
-        return WindLevel(self._get_state_bits(3, 1, 3))
+    def fanSpeed(self) -> FanSpeed:
+        return FanSpeed(self._get_state_bits(3, 1, 3))
 
-    @windLevel.setter
-    def windLevel(self, value: WindLevel):
+    @fanSpeed.setter
+    def fanSpeed(self, value: FanSpeed):
         self._set_state_bits(3, 1, 3, int(value))
             
     @property
-    def cpmode(self) -> bool:  # Turbo
+    def turbo(self) -> bool:
         return self._get_state_bit(3, 0)
 
-    @cpmode.setter
-    def cpmode(self, value: bool):
+    @turbo.setter
+    def turbo(self, value: bool):
         self._set_state_bit(3, 0, value)
     
     @property
-    def mute(self) -> bool:
+    def quite(self) -> bool:
         return self._get_state_bit(4, 1)
 
-    @mute.setter
-    def mute(self, value: bool):
+    @quite.setter
+    def quite(self, value: bool):
         self._set_state_bit(4, 1, value)
             
     @property
-    def temtyp(self) -> bool:
-        return self._get_state_bit(4, 2)
+    def temperatureScale(self) -> TemperatureScale:
+        return TemperatureScale(self._get_state_bit(4, 2))
 
-    @temtyp.setter
-    def temtyp(self, value: bool):
-        self._set_state_bit(4, 2, value)
+    @temperatureScale.setter
+    def temperatureScale(self, value: TemperatureScale):
+        self._set_state_bit(4, 2, bool(TemperatureScale(value)))
             
     @property
-    def wdNumber(self) -> int:  # target temperature
+    def desiredTemperature(self) -> int:
         wen = self._get_state_bits(4, 3, 5)
         wen = wen - 16 if wen >= 16 else wen
         wd_number = wen + 16 if wen > 0 else 16
         return wd_number
 
-    @wdNumber.setter
-    def wdNumber(self, value: int):
+    @desiredTemperature.setter
+    def desiredTemperature(self, value: int):
         pass
             
     @property
-    def windLR(self) -> int:
-        return self._get_state_bits(5, 0, 4)
+    def horizontalMode(self) -> HorizontalFlowMode:
+        return HorizontalFlowMode(self._get_state_bits(5, 0, 4))
 
-    @windLR.setter
-    def windLR(self, value: int):
-        self._set_state_bits(5, 0, 4, value)
+    @horizontalMode.setter
+    def horizontalMode(self, value: HorizontalFlowMode):
+        self._set_state_bits(5, 0, 4, int(value))
             
     @property
-    def windTB(self) -> int:
-        return self._get_state_bits(5, 4, 4)
+    def verticalFlowMode(self) -> VerticalFlowMode:
+        return VerticalFlowMode(self._get_state_bits(5, 4, 4))
 
-    @windTB.setter
-    def windTB(self, value: int):
-        self._set_state_bits(5, 4, 4, value)
+    @verticalFlowMode.setter
+    def verticalFlowMode(self, value: VerticalFlowMode):
+        self._set_state_bits(5, 4, 4, int(value))
             
     @property
-    def lighting(self) -> bool:
+    def display(self) -> bool:
         return self._get_state_bit(6, 0)
 
-    @lighting.setter
-    def lighting(self, value: bool):
+    @display.setter
+    def display(self, value: bool):
         self._set_state_bit(6, 0, value)
             
     @property
@@ -236,7 +248,7 @@ class DeviceState:
         self._set_state_bit(6, 1, value)
             
     @property
-    def timingMode(self) -> bool:
+    def timingMode(self) -> bool:  # ?????
         return self._get_state_bit(6, 2)
 
     @timingMode.setter
@@ -244,15 +256,15 @@ class DeviceState:
         self._set_state_bit(6, 2, value)
             
     @property
-    def dryingmode(self) -> bool:  # Auxiliary heater (on, hot), Drying(off, cool or dry)
+    def dryingMode(self) -> bool:  # Auxiliary heater (on, hot), Drying(off, cool or dry)
         return self._get_state_bit(6, 3)
 
-    @dryingmode.setter
-    def dryingmode(self, value: bool):
+    @dryingMode.setter
+    def dryingMode(self, value: bool):
         self._set_state_bit(6, 3, value)
             
     @property
-    def wdNumberMode(self) -> int:
+    def wdNumberMode(self) -> int:  # ??????
         return self._get_state_bits(6, 4, 2)
 
     @wdNumberMode.setter
@@ -295,7 +307,8 @@ class DeviceState:
     @bootTime.setter
     def bootTime(self, value: time):
         if type(value) is str:
-            value = time.fromisoformat(value)
+            val_s = str(value)
+            value = time.fromisoformat(val_s)
         val = value.hour * 60 + value.minute
         val_l = val & 0xff
         val_h = (val >> 8) & 0xff
@@ -322,7 +335,8 @@ class DeviceState:
     @shutTime.setter
     def shutTime(self, value: time):
         if type(value) is str:
-            value = time.fromisoformat(value)
+            val_s = str(value)
+            value = time.fromisoformat(val_s)
         val = value.hour * 60 + value.minute
         val_l = val & 0xff
         val_h = (val >> 8) & 0xff
@@ -330,7 +344,7 @@ class DeviceState:
         self._set_state_bits(9, 0, 8, val_l)
             
     @property
-    def wujiNum(self) -> int:
+    def wujiNum(self) -> int:  # ??????
         return self._get_state_bits(10, 0, 8)
 
     @wujiNum.setter
@@ -341,18 +355,18 @@ class DeviceState:
     def indoorTemperature(self) -> float:
         hi = self._get_state_bits(11, 0, 8)
         low = self._get_state_bits(12, 0, 8)
-        return hi + 0.1 * low if not self.temtyp else hi * 1.3 + 32
+        return hi + 0.1 * low if not self.temperatureScale else hi * 1.3 + 32
 
     @property
-    def windMode(self) -> WindMode:
-        wind_mode = int(self.windLevel)
-        if self.cpmode:
+    def fanMode(self) -> FanMode:
+        wind_mode = int(self.fanSpeed)
+        if self.turbo:
             wind_mode = 8
         else:
-            if self.mute:
+            if self.quite:
                 wind_mode = 7
-        return WindMode(wind_mode)
+        return FanMode(wind_mode)
 
-    @windMode.setter
-    def windMode(self, value: WindMode):
+    @fanMode.setter
+    def fanMode(self, value: FanMode):
         pass
