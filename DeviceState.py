@@ -2,6 +2,8 @@ from datetime import time
 from enum import IntEnum, Enum
 from typing import List
 
+import valueHelper
+
 
 class Mode(IntEnum):
     Auto = 0
@@ -119,19 +121,13 @@ class DeviceState:
         for i in range(0, len(list_name), n):
             yield list_name[i:i + n]
 
-    def _get_val(self, i):
-        val = getattr(self, i)
-        if issubclass(type(val), Enum):
-            val = f'{val.name}({val})'
-        return val
-
     def __repr__(self):
         keys = [i for i in dir(self) if not i.startswith('_')]
         skip = ['bits', 'cmd', 'raw']
         filtered = [key for key in keys if key not in skip]
         chunks = self._create_chunks(filtered, 6)
 
-        chunks_with_vals = [', '.join([f'{i}: {self._get_val(i)}' for i in j]) for j in chunks]
+        chunks_with_vals = [', '.join([f'{i}: {valueHelper.get_val(getattr(self, i))}' for i in j]) for j in chunks]
         out = ',\n'.join(chunks_with_vals)
         return out
 
@@ -162,6 +158,12 @@ class DeviceState:
 
     @mode.setter
     def mode(self, value: Mode):
+        if type(value) is str:
+            s = str(value)
+            try:
+                value = Mode[s]
+            except KeyError:
+                value = Mode(int(s))
         self._set_state_bits(3, 5, 3, int(value))
             
     @property
@@ -178,6 +180,12 @@ class DeviceState:
 
     @fanSpeed.setter
     def fanSpeed(self, value: FanSpeed):
+        if type(value) is str:
+            s = str(value)
+            try:
+                value = FanSpeed[s]
+            except KeyError:
+                value = FanSpeed(int(s))
         self._set_state_bits(3, 1, 3, int(value))
             
     @property
@@ -202,7 +210,13 @@ class DeviceState:
 
     @temperatureScale.setter
     def temperatureScale(self, value: TemperatureScale):
-        self._set_state_bit(4, 2, bool(TemperatureScale(value)))
+        if type(value) is str:
+            s = str(value)
+            try:
+                value = TemperatureScale[s]
+            except KeyError:
+                value = TemperatureScale(int(s))
+        self._set_state_bit(4, 2, bool(value))
             
     @property
     def desiredTemperature(self) -> int:
@@ -216,19 +230,31 @@ class DeviceState:
         pass
             
     @property
-    def horizontalMode(self) -> HorizontalFlowMode:
+    def flowHorizontalMode(self) -> HorizontalFlowMode:
         return HorizontalFlowMode(self._get_state_bits(5, 0, 4))
 
-    @horizontalMode.setter
-    def horizontalMode(self, value: HorizontalFlowMode):
+    @flowHorizontalMode.setter
+    def flowHorizontalMode(self, value: HorizontalFlowMode):
+        if type(value) is str:
+            s = str(value)
+            try:
+                value = HorizontalFlowMode[s]
+            except KeyError:
+                value = HorizontalFlowMode(int(s))
         self._set_state_bits(5, 0, 4, int(value))
             
     @property
-    def verticalFlowMode(self) -> VerticalFlowMode:
+    def flowVerticalMode(self) -> VerticalFlowMode:
         return VerticalFlowMode(self._get_state_bits(5, 4, 4))
 
-    @verticalFlowMode.setter
-    def verticalFlowMode(self, value: VerticalFlowMode):
+    @flowVerticalMode.setter
+    def flowVerticalMode(self, value: VerticalFlowMode):
+        if type(value) is str:
+            s = str(value)
+            try:
+                value = VerticalFlowMode[s]
+            except KeyError:
+                value = VerticalFlowMode(int(s))
         self._set_state_bits(5, 4, 4, int(value))
             
     @property

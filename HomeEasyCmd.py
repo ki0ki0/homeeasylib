@@ -1,5 +1,7 @@
 import cmd
 from structlog import get_logger
+
+import valueHelper
 from HomeEasyLib import HomeEasyLib
 
 
@@ -82,7 +84,7 @@ class HomeEasyCmd(cmd.Cmd):
         if value is None:
             print("Device state isn't available(need update), or not valid property")
         else:
-            print(f"{mac} {key}={value}")
+            print(f'{key} = {valueHelper.get_val(value)}')
 
     def do_set(self, key: str):
         """set <key> <value> [device mac]
@@ -110,8 +112,12 @@ class HomeEasyCmd(cmd.Cmd):
                 return
 
             self.lib.set(mac, key, val)
+
+            self.do_get(key)
         except AttributeError:
             print(f"Invalid property {key}.")
+        except ValueError:
+            print(f"Invalid property value {val}.")
 
     # noinspection PyMethodMayBeStatic
     def do_exit(self, line: str):

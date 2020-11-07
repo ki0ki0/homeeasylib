@@ -71,20 +71,20 @@ class TestDeviceState(TestCase):
         self.assertEqual(17, state.desiredTemperature)
 
     def test_windLR(self):
-        self.assertEqual(0, DeviceState(self.data).horizontalMode)
+        self.assertEqual(0, DeviceState(self.data).flowHorizontalMode)
 
     def test_windLR_set(self):
         state = DeviceState(self.data)
-        state.horizontalMode = 3
-        self.assertEqual(3, state.horizontalMode)
+        state.flowHorizontalMode = 3
+        self.assertEqual(3, state.flowHorizontalMode)
 
     def test_windTB(self):
-        self.assertEqual(0, DeviceState(self.data).verticalFlowMode)
+        self.assertEqual(0, DeviceState(self.data).flowVerticalMode)
 
     def test_windTB_set(self):
         state = DeviceState(self.data)
-        state.verticalFlowMode = 3
-        self.assertEqual(3, state.verticalFlowMode)
+        state.flowVerticalMode = 3
+        self.assertEqual(3, state.flowVerticalMode)
 
     def test_lighting(self):
         self.assertEqual(True, DeviceState(self.data).display)
