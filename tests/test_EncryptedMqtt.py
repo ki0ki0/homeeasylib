@@ -1,5 +1,5 @@
 from unittest import TestCase
-from EncryptedMqtt import EncryptedMqtt
+from HomeEasyLib.EncryptedMqtt import EncryptedMqtt
 
 
 class TestEncryptedMqtt(TestCase):

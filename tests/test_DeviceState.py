@@ -1,8 +1,7 @@
 import unittest
 from datetime import time
 from unittest import TestCase
-
-from DeviceState import DeviceState, Mode, FanSpeed
+from HomeEasyLib.DeviceState import DeviceState, Mode, FanSpeed
 
 
 class TestDeviceState(TestCase):
