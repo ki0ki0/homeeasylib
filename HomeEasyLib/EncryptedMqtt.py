@@ -1,16 +1,14 @@
-import asyncio
 import threading
-from socket import socket
 from typing import Any, Callable, Dict
 
 import paho.mqtt.client as mqtt
 from Crypto.Cipher import AES
 from Crypto.Hash import MD5
-from Crypto.Util.Padding import pad, unpad
+from Crypto.Util.Padding import pad
 
 from structlog import get_logger
 
-from AsyncioHelper import AsyncioHelper
+from HomeEasyLib.AsyncioHelper import AsyncioHelper
 
 logger = get_logger()
 
@@ -33,8 +31,6 @@ class EncryptedMqtt(mqtt.Client):
         self._callback_mutex_decrypted = threading.RLock()
         self._on_message_decrypted = _on_message_decrypted_stub
 
-        AsyncioHelper(self)
-
     def publish(self, topic, payload=None, qos=0, retain=False, properties=None):
         mac: str = self.mac_from_topic(topic)
         key = self.key_for_mac(mac)
@@ -44,7 +40,6 @@ class EncryptedMqtt(mqtt.Client):
     def connect(self, host, port=1883, keepalive=60, bind_address="", bind_port=0,
                 clean_start=mqtt.MQTT_CLEAN_START_FIRST_ONLY, properties=None):
         connect = super().connect(host, port, keepalive, bind_address, bind_port, clean_start, properties)
-        # self.socket().setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 2048)
         return connect
 
     @property

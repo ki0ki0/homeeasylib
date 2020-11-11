@@ -2,6 +2,8 @@ from datetime import time
 from enum import IntEnum, Enum
 from typing import List
 
+from HomeEasyLib import valueHelper
+
 
 class Mode(IntEnum):
     Auto = 0
