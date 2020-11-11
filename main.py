@@ -1,9 +1,13 @@
 import argparse
+import asyncio
 import logging
+import sys
+
 import structlog
 from HomeEasyCmd import HomeEasyCmd
 
-if __name__ == '__main__':
+
+async def main():
     logging.basicConfig(
         level=logging.INFO
     )
@@ -43,11 +47,24 @@ if __name__ == '__main__':
         if args.mac is None:
             print(f"Device mac is required")
             exit(1)
-        cmd.do_update('')
+        await cmd.do_update('')
         exit(0)
 
     if args.update:
         print(f"Device update is requested")
-        cmd.do_update('')
+        await cmd.do_update('')
 
     cmd.cmdloop()
+
+    # cmd = HomeEasyCmd()
+    # cmd.do_mac('08bc20043c42')
+    # cmd.do_cmd('08bc20043c42')
+    # cmd.do_status('08bc20043c42')
+    # state = await cmd.do_update('08bc20043c42')
+    # print(F'Status:\n{state}')
+
+loop = asyncio.ProactorEventLoop()
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+asyncio.run(main())

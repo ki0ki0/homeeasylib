@@ -1,3 +1,5 @@
+import asyncio
+from asyncio import Future
 from typing import Any, Dict
 
 import paho.mqtt.client as mqtt
@@ -11,22 +13,17 @@ logger = get_logger()
 
 
 class HomeEasyLib:
-    statuses: Dict[str, DeviceState]
-    commands: Dict[str, DeviceState]
-    requested: Dict[str, bool]
-    dump: bool
-
-    def __init__(self):
-        self.mqtt = EncryptedMqtt()
-        self.commands = dict()
-        self.statuses = dict()
-        self.requested = dict()
-        self.dump = False
+    statuses: Dict[str, DeviceState] = dict()
+    commands: Dict[str, DeviceState] = dict()
+    futs: Dict[str, Future] = dict()
+    dump: bool = False
+    mqtt_client: EncryptedMqtt()
 
     def connect(self, host: str = "91.196.132.126", port: int = 1883):
-        self.mqtt.on_message_decrypted = self.on_message
-        self.mqtt.connect(host, port)
-        self.mqtt.loop_start()
+        self.mqtt_client = EncryptedMqtt()
+        self.mqtt_client.on_message_decrypted = self.on_message
+        self.mqtt_client.connect(host, port)
+        #  self.mqtt_client.loop_start()
 
     def on_message(self, _client: mqtt.Client, _userdata: Any, mac: str, decrypted: bytes, message: mqtt.MQTTMessage):
         logger.debug("message received", topic=message.topic, payload=message.payload.hex(), decrypted=decrypted.hex())
@@ -38,9 +35,9 @@ class HomeEasyLib:
             if self.dump:
                 logger.info("state received", topic=message.topic, state=state)
 
-            if mac in self.requested:
-                self.requested[mac] = False
-                print(f"{mac}:\n{state}")
+            if mac in self.futs:
+                fut = self.futs[mac]
+                fut.set_result(state)
 
         if 'dev/cmd/' in message.topic:
             self.commands[mac] = state
@@ -49,29 +46,33 @@ class HomeEasyLib:
     def dump_status(self, mac: str, topic_prefix: str = 'dev/status/010202/'):
         self.dump = True
         topic = topic_prefix + mac
-        self.mqtt.subscribe(topic)
+        self.mqtt_client.subscribe(topic)
 
     def dump_cmd(self, mac: str, topic_prefix: str = 'dev/cmd/010202/'):
         topic = topic_prefix + mac
-        self.mqtt.subscribe(topic)
+        self.mqtt_client.subscribe(topic)
 
     def disconnect(self):
-        self.mqtt.loop_stop()
-        self.mqtt.disconnect()
+        self.mqtt_client.disconnect()
 
     def request_status(self, mac: str,
                        cmd_topic_prefix: str = 'dev/cmd/010202/',
                        status_topic_prefix: str = 'dev/status/010202/'):
         data = bytes([170, 170, 18, 160, 10, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26])
-        self.mqtt.subscribe(status_topic_prefix + mac)
-        self.requested[mac] = True
-        self.mqtt.publish(cmd_topic_prefix + mac, data)
+        self.mqtt_client.subscribe(status_topic_prefix + mac)
+
+        loop = asyncio.get_running_loop()
+        fut = loop.create_future()
+        self.futs[mac] = fut
+
+        self.mqtt_client.publish(cmd_topic_prefix + mac, data)
+        return fut
 
     def send(self, mac: str, topic_prefix: str = 'dev/cmd/010202/'):
         if mac not in self.statuses:
             return None
         status = self.statuses[mac]
-        self.mqtt.publish(topic_prefix + mac, status.cmd)
+        self.mqtt_client.publish(topic_prefix + mac, status.cmd)
 
     def get(self, mac: str, key: str) -> Any:
         if mac not in self.statuses:

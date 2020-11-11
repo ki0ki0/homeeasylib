@@ -14,10 +14,13 @@ class HomeEasyCmd(cmd.Cmd):
     lib: HomeEasyLib
     mac: str = ''
     lib = HomeEasyLib()
-    lib.connect()
     prompt = "HomeEasyCmd>"
     intro = 'HomeEasy HVAC command tool. Type "help" to get some help.'
+    connected: bool = False
 
+    def _connect(self):
+        if not self.connected:
+            self.lib.connect()
 
     def do_mac(self, mac: str):
         """mac <device mac>
@@ -27,6 +30,7 @@ class HomeEasyCmd(cmd.Cmd):
     def do_status(self, mac: str = ''):
         """status [device mac]
             Dump messages from "status" queue."""
+        self._connect()
         mac = mac if len(mac) != 0 else self.mac
         if len(mac) != 0:
             self.lib.dump_status(mac)
@@ -36,24 +40,28 @@ class HomeEasyCmd(cmd.Cmd):
     def do_cmd(self, mac: str = ''):
         """cmd [device mac]
             Dump messages from "cmd" queue."""
+        self._connect()
         mac = mac if len(mac) != 0 else self.mac
         if len(mac) != 0:
             self.lib.dump_cmd(mac)
         else:
             self.lib.dump_cmd('#', "dev/cmd/")
 
-    def do_update(self, mac: str = ''):
+    async def do_update(self, mac: str = ''):
         """update [device mac]
             Request status update for device."""
+        self._connect()
         mac = mac if len(mac) != 0 else self.mac
         if len(mac) != 0:
-            self.lib.request_status(mac)
+            state = await self.lib.request_status(mac)
+            print(f"{mac}:\n{state}")
         else:
             print("Mac is required.")
 
-    def do_send(self, mac: str = ''):
+    async def do_send(self, mac: str = ''):
         """send [device mac]
             Get status value for device."""
+        # await self._connect()
         mac = mac if len(mac) != 0 else self.mac
         if len(mac) == 0:
             print("Mac is required.")
@@ -120,18 +128,13 @@ class HomeEasyCmd(cmd.Cmd):
             print(f"Invalid property value {val}.")
 
     # noinspection PyMethodMayBeStatic
-    def do_exit(self, line: str):
+    def do_exit(self, _line: str):
         """exit
             Close the tool."""
         exit(0)
 
     # noinspection PyPep8Naming, PyMethodMayBeStatic
-    def do_EOF(self, line: str):
+    def do_EOF(self, _line: str):
+        self.lib.disconnect()
         return True
 
-    def preloop(self) -> None:
-        super().preloop()
-
-    def postloop(self) -> None:
-        self.lib.disconnect()
-        super().postloop()
