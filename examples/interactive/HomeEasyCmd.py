@@ -1,9 +1,9 @@
 import cmd
 from structlog import get_logger
 
-from HomeEasyLib import valueHelper
-from HomeEasyLib.DeviceState import DeviceState
-from HomeEasyLib.HomeEasyLib import HomeEasyLib
+from homeeasy import valueHelper
+from homeeasy.DeviceState import DeviceState
+from homeeasy.HomeEasyLib import HomeEasyLib
 
 logger = get_logger()
 

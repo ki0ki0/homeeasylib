@@ -5,12 +5,10 @@ import paho.mqtt.client as mqtt
 from Crypto.Cipher import AES
 from Crypto.Hash import MD5
 from Crypto.Util.Padding import pad
-
 from structlog import get_logger
 
-from HomeEasyLib.AsyncioHelper import AsyncioHelper
-
 logger = get_logger()
+
 
 # noinspection PyUnusedLocal
 def _on_message_decrypted_stub(client: mqtt.Client, userdata: Any, mac: str, decrypted: bytes,
@@ -19,7 +17,6 @@ def _on_message_decrypted_stub(client: mqtt.Client, userdata: Any, mac: str, dec
 
 
 class EncryptedMqtt(mqtt.Client):
-
     _on_message_decrypted: Callable[[mqtt.Client, Any, str, bytes, mqtt.MQTTMessage], None]
     _callback_mutex_decrypted: threading.RLock
     _keys: Dict[str, bytes]

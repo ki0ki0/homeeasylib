@@ -1,13 +1,12 @@
 import asyncio
-from asyncio import Future
 from typing import Any, Dict, Callable
 
 import paho.mqtt.client as mqtt
 from structlog import get_logger
 
-from HomeEasyLib.AsyncioHelper import AsyncioHelper
-from HomeEasyLib.DeviceState import DeviceState
-from HomeEasyLib.EncryptedMqtt import EncryptedMqtt
+from homeeasy.AsyncioHelper import AsyncioHelper
+from homeeasy.DeviceState import DeviceState
+from homeeasy.EncryptedMqtt import EncryptedMqtt
 
 logger = get_logger()
 

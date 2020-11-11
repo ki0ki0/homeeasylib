@@ -1,8 +1,8 @@
 from datetime import time
-from enum import IntEnum, Enum
+from enum import IntEnum
 from typing import List
 
-from HomeEasyLib import valueHelper
+from homeeasy import valueHelper
 
 
 class Mode(IntEnum):
@@ -97,7 +97,7 @@ class DeviceState:
         byte_pos = byte_pos + 4  # offset on header size
         if type(val) is str:
             val_s = str(val).lower()
-            val = False if val_s== 'false' or val_s == '0' else True
+            val = False if val_s == 'false' or val_s == '0' else True
         self.bits[byte_pos * 8 + bit_pos] = bool(val)
 
     def _get_state_bits(self, x: int, y: int, count: int):
@@ -108,9 +108,9 @@ class DeviceState:
         return val
 
     def _set_state_bits(self, x: int, y: int, count: int, val: int):
-        ival = int(val)
+        val = int(val)
         size = 8 * int((count / 8 + (1 if count % 8 > 0 else 0)))
-        range_ = [self._get_bit(ival, i, size) for i in range(size)]
+        range_ = [self._get_bit(val, i, size) for i in range(size)]
         bits = range_[-count:]
 
         for i in range(count):
@@ -127,8 +127,8 @@ class DeviceState:
         filtered = [key for key in keys if key not in skip]
         chunks = self._create_chunks(filtered, 6)
 
-        chunks_with_vals = [', '.join([f'{i}: {valueHelper.get_val(getattr(self, i))}' for i in j]) for j in chunks]
-        out = ',\n'.join(chunks_with_vals)
+        chunks_with_values = [', '.join([f'{i}: {valueHelper.get_val(getattr(self, i))}' for i in j]) for j in chunks]
+        out = ',\n'.join(chunks_with_values)
         return out
 
     def __str__(self):
@@ -332,15 +332,20 @@ class DeviceState:
 
     @bootTime.setter
     def bootTime(self, value: time):
-        if type(value) is str:
-            val_s = str(value)
-            value = time.fromisoformat(val_s)
+        value = self.str2time(value)
         val = value.hour * 60 + value.minute
         val_l = val & 0xff
         val_h = (val >> 8) & 0xff
         self._set_state_bits(7, 5, 3, val_h)
         self._set_state_bits(9, 0, 8, val_l)
-            
+
+    @staticmethod
+    def str2time(value):
+        if type(value) is str:
+            val_s = str(value)
+            value = time.fromisoformat(val_s)
+        return value
+
     @property
     def shutEnabled(self) -> bool:
         return self._get_state_bit(7, 0)
@@ -360,9 +365,7 @@ class DeviceState:
 
     @shutTime.setter
     def shutTime(self, value: time):
-        if type(value) is str:
-            val_s = str(value)
-            value = time.fromisoformat(val_s)
+        value = self.str2time(value)
         val = value.hour * 60 + value.minute
         val_l = val & 0xff
         val_h = (val >> 8) & 0xff
