@@ -1,19 +1,26 @@
-import pathlib
-from setuptools import setup
+import setuptools
 
+with open("README.md", "r") as fh:
+  long_description = fh.read()
 
-HERE = pathlib.Path(__file__).parent
-README = (HERE / "README.md").read_text()
-setup(
+setuptools.setup(
   name="homeeasy",
-  version="0.0.1",
+  version="0.0.2",
   description="Control HVAC devices compatible with HomeEasy application.",
-  long_description=README,
+  long_description=long_description,
   long_description_content_type="text/markdown",
-  author="",
-  author_email="",
+  url="https://github.com/ki0ki0/homeeasylib",
+  author="Ihor Kostiuk",
+  author_email="igorkost@gmail.com",
   license="GPLv3",
-  packages=["homeeasy"],
+  packages=setuptools.find_packages(),
   install_requires=["paho-mqtt", "pycryptodome", "structlog"],
-  zip_safe=False
+  classifiers=[
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+    "Development Status :: 3 - Alpha",
+    "Framework :: AsyncIO"
+  ],
+  python_requires='>=3.6',
 )

@@ -19,7 +19,7 @@ structlog.configure(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description='HomeEasy HVAC interactive tool.')
-    parser.add_argument("-m", "--mac", type=str, required=True,
+    parser.add_argument("-m", "--mac", type=str,
                         help="Set default device mac address")
     parser.add_argument("-u", "--update", action='store_true',
                         help="Do update for default device at start")
@@ -32,7 +32,7 @@ def main() -> None:
         print(f"Device mac: {args.mac}")
         cmd.do_mac(args.mac)
 
-    if args.update is not None:
+    if args.update:
         if args.mac is None:
             print(f"Device mac is required")
             exit(1)
