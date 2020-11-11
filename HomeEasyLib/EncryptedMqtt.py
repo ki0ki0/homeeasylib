@@ -4,13 +4,13 @@ from typing import Any, Callable, Dict
 import paho.mqtt.client as mqtt
 from Crypto.Cipher import AES
 from Crypto.Hash import MD5
-from Crypto.Util.Padding import pad, unpad
+from Crypto.Util.Padding import pad
 
 from structlog import get_logger
 
+from HomeEasyLib.AsyncioHelper import AsyncioHelper
 
 logger = get_logger()
-
 
 # noinspection PyUnusedLocal
 def _on_message_decrypted_stub(client: mqtt.Client, userdata: Any, mac: str, decrypted: bytes,
@@ -36,6 +36,11 @@ class EncryptedMqtt(mqtt.Client):
         key = self.key_for_mac(mac)
         encrypted = self.encrypt(payload, key)
         return super().publish(topic, encrypted, qos, retain, properties)
+
+    def connect(self, host, port=1883, keepalive=60, bind_address="", bind_port=0,
+                clean_start=mqtt.MQTT_CLEAN_START_FIRST_ONLY, properties=None):
+        connect = super().connect(host, port, keepalive, bind_address, bind_port, clean_start, properties)
+        return connect
 
     @property
     def on_message_decrypted(self):

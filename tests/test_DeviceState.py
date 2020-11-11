@@ -1,8 +1,7 @@
 import unittest
 from datetime import time
 from unittest import TestCase
-
-from DeviceState import DeviceState, Mode, FanSpeed
+from HomeEasyLib.DeviceState import DeviceState, Mode, FanSpeed
 
 
 class TestDeviceState(TestCase):
@@ -202,3 +201,10 @@ class TestDeviceState(TestCase):
     def test_str(self):
         s = str(DeviceState(self.data))
         self.assertEqual('', s)
+
+    def test_mode_quite_set(self):
+        state = DeviceState(self.data)
+        state.mode = Mode.Fan
+        state.quite = True
+        self.assertEqual(Mode.Fan, state.mode)
+        self.assertEqual(True, state.quite)

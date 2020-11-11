@@ -2,7 +2,7 @@ from datetime import time
 from enum import IntEnum, Enum
 from typing import List
 
-import valueHelper
+from HomeEasyLib import valueHelper
 
 
 class Mode(IntEnum):
