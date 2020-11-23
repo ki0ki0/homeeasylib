@@ -30,7 +30,7 @@ setuptools.setup(
   author_email="igorkost@gmail.com",
   license="GPLv3",
   packages=setuptools.find_packages(),
-  install_requires=["paho-mqtt", "pycryptodome", "structlog"],
+  install_requires=["paho-mqtt", "pycryptodome"],
   classifiers=[
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
