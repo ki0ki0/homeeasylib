@@ -3,20 +3,11 @@ import asyncio
 import logging
 import sys
 
-import structlog
 
 from examples.cmd.HomeEasy import HomeEasy
 
 logging.basicConfig(
-    level=logging.INFO
-)
-structlog.configure(
-    processors=[
-        structlog.processors.KeyValueRenderer(
-            key_order=["topic"]
-        )
-    ],
-    logger_factory=structlog.stdlib.LoggerFactory(),
+    level=logging.DEBUG
 )
 
 

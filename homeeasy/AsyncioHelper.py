@@ -1,9 +1,9 @@
 import asyncio
+import logging
 
 from paho.mqtt.client import Client, MQTT_ERR_SUCCESS
-from structlog import get_logger
 
-logger = get_logger()
+logger = logging.getLogger(__name__)
 
 
 class AsyncioHelper:

@@ -1,11 +1,12 @@
 import cmd
-from structlog import get_logger
+import logging
 
 from homeeasy import valueHelper
+from homeeasy.CustomLogger import CustomLogger
 from homeeasy.DeviceState import DeviceState
 from homeeasy.HomeEasyLib import HomeEasyLib
 
-logger = get_logger()
+logger = CustomLogger(logging.getLogger(__name__))
 
 
 class HomeEasyCmd(cmd.Cmd):

@@ -1,19 +1,9 @@
 import argparse
 import logging
-import structlog
-
 from examples.interactive.HomeEasyCmd import HomeEasyCmd
 
 logging.basicConfig(
     level=logging.INFO
-)
-structlog.configure(
-    processors=[
-        structlog.processors.KeyValueRenderer(
-            key_order=["topic"]
-        )
-    ],
-    logger_factory=structlog.stdlib.LoggerFactory(),
 )
 
 

@@ -1,14 +1,15 @@
 import asyncio
+import logging
 from typing import Any, Dict, Callable
 
 import paho.mqtt.client as mqtt
-from structlog import get_logger
 
 from homeeasy.AsyncioHelper import AsyncioHelper
+from homeeasy.CustomLogger import CustomLogger
 from homeeasy.DeviceState import DeviceState
 from homeeasy.EncryptedMqtt import EncryptedMqtt
 
-logger = get_logger()
+logger = CustomLogger(logging.getLogger(__name__))
 
 
 class HomeEasyLib:

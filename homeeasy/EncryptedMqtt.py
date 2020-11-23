@@ -1,13 +1,13 @@
-import threading
-from typing import Any, Callable, Dict, Optional
-
+import logging
+from typing import Any, Callable, Dict
 import paho.mqtt.client as mqtt
 from Crypto.Cipher import AES
 from Crypto.Hash import MD5
 from Crypto.Util.Padding import pad
-from structlog import get_logger
 
-logger = get_logger()
+from homeeasy.CustomLogger import CustomLogger
+
+logger = CustomLogger(logging.getLogger(__name__))
 
 
 class EncryptedMqtt(mqtt.Client):

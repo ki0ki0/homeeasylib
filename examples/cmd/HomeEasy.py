@@ -1,11 +1,11 @@
+import logging
 from typing import List
-
-from structlog import get_logger
 
 from homeeasy import valueHelper
 from homeeasy.HomeEasyLib import HomeEasyLib, DeviceState
+from homeeasy.CustomLogger import CustomLogger
 
-logger = get_logger()
+logger = CustomLogger(logging.getLogger(__name__))
 
 
 class HomeEasy:
