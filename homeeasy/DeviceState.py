@@ -1,6 +1,6 @@
 from datetime import time
 from enum import IntEnum
-from typing import List
+from typing import List, Dict
 
 from homeeasy import valueHelper
 
@@ -65,6 +65,14 @@ class TemperatureScale(IntEnum):
 # noinspection PyPep8Naming
 class DeviceState:
     bits: List[bool]
+
+    _wd_number_dict: Dict[str, int] = {'00000': 61, '10000': 61, '00001': 62, '10001': 63, '00010': 64, '10010': 65,
+                                      '00011': 66, '10011': 67, '00100': 68, '10100': 68, '00101': 69, '10101': 70,
+                                      '00110': 71, '10110': 72, '00111': 73, '10111': 74, '01000': 75, '11000': 76,
+                                      '01001': 77, '11001': 77, '01010': 78, '11010': 79, '01011': 80, '11011': 81,
+                                      '01100': 82, '11100': 83, '01101': 84, '11101': 85, '01110': 86, '11110': 86,
+                                      '01111': 87, '11111': 88}
+    _wd_number_dict_invert = {value: key for key, value in _wd_number_dict.items()}
 
     def __init__(self, message: bytes) -> None:
         self.raw = message
@@ -221,13 +229,22 @@ class DeviceState:
     @property
     def desiredTemperature(self) -> int:
         wen = self._get_state_bits(4, 3, 5)
-        wen = wen - 16 if wen >= 16 else wen
-        wd_number = wen + 16 if wen > 0 else 16
+        if not self.temperatureScale:
+            wen = wen - 16 if wen >= 16 else wen
+            wd_number = wen + 16 if wen > 0 else 16
+        else:
+            wen_str = format(wen, '#07b')[2:]
+            wd_number = self._wd_number_dict[wen_str]
         return wd_number
 
     @desiredTemperature.setter
     def desiredTemperature(self, value: int):
-        pass
+        if not self.temperatureScale:
+            val = value - 16 if value >= 16 else value
+        else:
+            val = self._wd_number_dict_invert[value];
+
+        self._set_state_bits(4, 3, 5, val)
             
     @property
     def flowHorizontalMode(self) -> HorizontalFlowMode:
@@ -398,4 +415,12 @@ class DeviceState:
 
     @fanMode.setter
     def fanMode(self, value: FanMode):
-        pass
+        self.quite = False
+        self.turbo = False
+
+        if value == FanMode.Turbo:
+            self.turbo = True
+        elif value == FanMode.Quite:
+            self.quite = True
+        else:
+            self.fanSpeed = FanSpeed(int(value))

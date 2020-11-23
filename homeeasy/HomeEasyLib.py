@@ -92,10 +92,11 @@ class HomeEasyLib:
         self.request_status(mac, lambda _, state: fut.set_result(state), cmd_topic_prefix, status_topic_prefix)
         return fut
 
-    def send(self, mac: str, topic_prefix: str = 'dev/cmd/010202/'):
-        if mac not in self.cache:
-            return None
-        status = self.cache[mac]
+    def send(self, mac: str, status: DeviceState = None, topic_prefix: str = 'dev/cmd/010202/'):
+        if status is None:
+            if mac not in self.cache:
+                return None
+            status = self.cache[mac]
         self.mqtt_client.publish(topic_prefix + mac, status.cmd)
 
     def get(self, mac: str, key: str) -> Any:
