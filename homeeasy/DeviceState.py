@@ -349,7 +349,7 @@ class DeviceState:
 
     @bootTime.setter
     def bootTime(self, value: time):
-        value = self.str2time(value)
+        value = self._str2time(value)
         val = value.hour * 60 + value.minute
         val_l = val & 0xff
         val_h = (val >> 8) & 0xff
@@ -357,7 +357,7 @@ class DeviceState:
         self._set_state_bits(9, 0, 8, val_l)
 
     @staticmethod
-    def str2time(value):
+    def _str2time(value):
         if type(value) is str:
             val_s = str(value)
             value = time.fromisoformat(val_s)
@@ -382,7 +382,7 @@ class DeviceState:
 
     @shutTime.setter
     def shutTime(self, value: time):
-        value = self.str2time(value)
+        value = self._str2time(value)
         val = value.hour * 60 + value.minute
         val_l = val & 0xff
         val_h = (val >> 8) & 0xff
