@@ -20,7 +20,7 @@ class HomeEasyLib:
 
     def __init__(self) -> None:
         self.mqtt_client = EncryptedMqtt()
-        self.mqtt_client.on_message_decrypted = self.on_message
+        self.mqtt_client.on_message = self.on_message
 
         loop = None
         try:
