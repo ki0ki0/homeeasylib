@@ -3,7 +3,7 @@ import logging
 from examples.interactive.HomeEasyCmd import HomeEasyCmd
 
 logging.basicConfig(
-    level=logging.INFO
+    level=logging.DEBUG
 )
 
 
