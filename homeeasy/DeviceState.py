@@ -424,3 +424,6 @@ class DeviceState:
             self.quite = True
         else:
             self.fanSpeed = FanSpeed(int(value))
+
+    def __eq__(self, o: object) -> bool:
+        return str(self) == str(o)
