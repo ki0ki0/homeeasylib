@@ -10,25 +10,46 @@ logger = CustomLogger(logging.getLogger(__name__))
 
 
 class HomeEasyLibLocal:
-    _reader: StreamReader
-    _writer: StreamWriter
-    _state: DeviceState
+    _reader: StreamReader = None
+    _writer: StreamWriter = None
+    _state: DeviceState = None
+    _host: str = ""
+    _port: int = 0
 
     async def connect(self, host: str, port: int = 12416):
-        self._reader, self._writer = await asyncio.open_connection(host, port)
+        self._host = host
+        self._port = port
+        await self._reconnect()
+
+    async def _reconnect(self):
+        await self.disconnect()
+        self._reader, self._writer = await asyncio.open_connection(self._host, self._port)
 
     async def disconnect(self):
-        self._writer.close()
-        await self._writer.wait_closed()
+        if self._writer is not None:
+            self._writer.close()
+            await self._writer.wait_closed()
+            self._writer = None
 
     async def request_status_async(self):
         data = bytes([170, 170, 18, 160, 10, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26])
         return await self._send(data)
 
     async def _send(self, data):
-        self._writer.write(data)
-        await self._writer.drain()
-        data = await self._reader.read(4096)
+        try:
+            self._writer.write(data)
+            await self._writer.drain()
+            data = await asyncio.wait_for(self._reader.read(4096), 3.0)
+        except TimeoutError:
+            await self._reconnect()
+            pass
+        except ConnectionError:
+            await self._reconnect()
+            pass
+        except OSError:
+            await self._reconnect()
+            pass
+
         self._state = DeviceState(data)
         return self._state
 
