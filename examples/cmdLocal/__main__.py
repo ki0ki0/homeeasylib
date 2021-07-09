@@ -4,7 +4,8 @@ import logging
 import sys
 
 
-from examples.cmd.HomeEasy import HomeEasy
+from examples.cmdLocal.HomeEasy import HomeEasy
+from homeeasy.HomeEasyLibLocalDiscovery import HomeEasyLibLocalDiscovery
 
 logging.basicConfig(
     level=logging.DEBUG
@@ -14,8 +15,11 @@ logging.basicConfig(
 async def main():
     parser = argparse.ArgumentParser(description='HomeEasy HVAC command tool.')
 
-    parser.add_argument("-m", "--mac", type=str, required=True,
-                        help="Set default device mac address")
+    parser.add_argument("-d", "--discover", action='store_false',
+                        help="Discover available devices")
+
+    parser.add_argument("-i", "--ip", type=str,
+                        help="Set device ip address")
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-g", "--get", type=str, nargs='+', metavar='property',
@@ -28,18 +32,24 @@ async def main():
 
     cmd = HomeEasy()
 
-    if args.mac is None:
-        print(f"Device mac is required")
+    if args.discover is False:
+        discovery = HomeEasyLibLocalDiscovery()
+        devices = discovery.request_devices()
+        print("Available devices: " + str(list(map(lambda d: {d[0], d[1]}, devices))))
         exit(1)
 
-    print(f"Device mac: {args.mac}")
+    if args.ip is None:
+        print(f"Device ip is required")
+        exit(1)
+
+    print(f"Device ip: {args.ip}")
 
     if args.get is not None:
-        await cmd.get(args.mac, args.get)
+        await cmd.get(args.ip, args.get)
     elif args.set is not None:
-        await cmd.set(args.mac, args.set)
+        await cmd.set(args.ip, args.set)
     else:
-        await cmd.status(args.mac)
+        await cmd.status(args.ip)
 
 
 loop = asyncio.ProactorEventLoop()
