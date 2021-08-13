@@ -18,6 +18,8 @@ class TestHomeEasyLib(TestCase):
             self.assertEqual(mac, m)
             self.assertEqual(state, s)
 
+        lib.connect()
+
         lib.request_status(mac, check)
 
         message = mqtt.MQTTMessage(0, 'dev/status/'.encode('utf-8'))
@@ -25,6 +27,7 @@ class TestHomeEasyLib(TestCase):
 
     def test_request_status_async(self):
         lib = HomeEasyLib()
+        lib.connect()
         mac = "mac"
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self.request_status_async_send_status_twice(lib, mac))
