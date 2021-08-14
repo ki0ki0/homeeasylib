@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from asyncio import StreamWriter, StreamReader
+from asyncio import StreamWriter, StreamReader, Task
 from typing import Any
 
 from homeeasy.CustomLogger import CustomLogger
@@ -12,6 +12,7 @@ logger = CustomLogger(logging.getLogger(__name__))
 class HomeEasyLibLocal:
     _reader: StreamReader = None
     _writer: StreamWriter = None
+    _readTask: Task = None
     _state: DeviceState = None
     _host: str = ""
     _port: int = 0
@@ -32,7 +33,6 @@ class HomeEasyLibLocal:
                 await self._reconnect()
                 return
 
-            print(f"read {len(resp)}")
             if not len(resp) == 21:
                 continue
             self._state = DeviceState(resp)
@@ -41,10 +41,15 @@ class HomeEasyLibLocal:
     async def _reconnect(self):
         await self.disconnect()
         self._reader, self._writer = await asyncio.open_connection(self._host, self._port)
-        task = self._loop.create_task(self._read_async())
+        self._readTask = self._loop.create_task(self._read_async())
 
     async def disconnect(self):
         if self._writer is not None:
+            try:
+                self._readTask.cancel()
+            except:
+                pass
+
             try:
                 self._writer.close()
                 await self._writer.wait_closed()
@@ -61,12 +66,10 @@ class HomeEasyLibLocal:
         while retry < 3:
             retry = retry + 1
             try:
-                print(f"write {len(data)}")
                 self._writer.write(data)
                 await self._writer.drain()
                 break
             except:
-                print("retry")
                 if retry < 3:
                     await self._reconnect()
                 else:

@@ -56,7 +56,7 @@ class HomeEasyCmd(Cmd):
 
     def do_u(self, some = None) -> None:
         """update
-                    Request status update for device."""
+            Request status update for device."""
         return self.do_update()
 
     def do_update(self) -> None:
@@ -73,7 +73,7 @@ class HomeEasyCmd(Cmd):
 
     def do_s(self, somw = None) -> None:
         """send
-        Get status value for device."""
+            Get status value for device."""
         return self.do_send()
 
     def do_send(self, some = None) -> None:
