@@ -36,7 +36,7 @@ class HomeEasyLibLocal:
             if not len(resp) == 21:
                 continue
             self._state = DeviceState(resp)
-            self._callback(self._state)
+            await self._callback(self._state)
 
     async def _reconnect(self):
         await self.disconnect()
