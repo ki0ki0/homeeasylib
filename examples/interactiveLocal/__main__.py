@@ -29,6 +29,8 @@ else:
 # create instance
 cmd = HomeEasyCmd(mode=mode)
 
+cmd.start(loop)  # prepaire instance
+
 if args.ip is not None:
     print(f"Device IP: {args.ip}")
     cmd.do_ip(args.ip)
@@ -37,9 +39,8 @@ if args.update:
     if args.ip is None:
         print(f"Device ip is required")
         exit(1)
-    cmd.do_update('')
+    cmd.do_update()
 
-cmd.start(loop)  # prepaire instance
 try:
     loop.run_forever()  # our cmd will run automatilly from this moment
 except KeyboardInterrupt:

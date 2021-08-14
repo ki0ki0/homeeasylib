@@ -36,15 +36,19 @@ class HomeEasyCmd(Cmd):
         # Create async tasks to run in loop. There is run_loop=false by default
         super().cmdloop(loop)
 
-    async def _connect(self, ip: str) -> None:
-        if not self._connected:
-            self._connected = True
-            await self._lib.connect(ip)
-
     def do_ip(self, ip: str) -> None:
         """ip <device ip>
             Set default ip for operations."""
+        self.loop.create_task(self._ip_async(ip))
+
+    async def _ip_async(self, ip: str):
+        if not self._connected:
+            await self._lib.disconnect()
+            self._connected = False
+
         self._ip = ip
+        await self._lib.connect(ip)
+        self._connected = True
 
     @staticmethod
     def _print_status(ip: str, state: DeviceState) -> None:
@@ -54,33 +58,41 @@ class HomeEasyCmd(Cmd):
     def _print_cmd(ip: str, state: DeviceState) -> None:
         print(f"CMD {ip}:\n{state}")
 
-    def do_update(self, ip: str = '') -> None:
-        """update [device ip]
+    def do_u(self, some = None) -> None:
+        """update
+                    Request status update for device."""
+        return self.do_update()
+
+    def do_update(self) -> None:
+        """update
             Request status update for device."""
-        ip = ip if len(ip) != 0 else self._ip
-        if len(ip) != 0:
-            self.loop.create_task(self._update(ip))
-        else:
-            print("IP is required.")
-
-    async def _update(self, ip: str):
-        await self._connect(ip)
-        state = await self._lib.request_status_async()
-        self._print_status(ip, state)
-
-    def do_send(self, ip: str = '') -> None:
-        """send [device ip]
-            Get status value for device."""
-        ip = ip if len(ip) != 0 else self._ip
-        if len(ip) == 0:
-            print("IP is required.")
+        if not self._connected:
+            print("Connection required")
             return
 
-        self.loop.create_task(self._send(ip))
+        self.loop.create_task(self._update_async())
 
-    async def _send(self, ip: str):
-        await self._connect(ip)
-        await self._lib.send()
+    async def _update_async(self):
+        state = await self._lib.request_status_async()
+        self._print_status(self._ip, state)
+
+    def do_s(self, somw = None) -> None:
+        """send
+        Get status value for device."""
+        return self.do_send()
+
+    def do_send(self, some = None) -> None:
+        """send
+            Get status value for device."""
+        if not self._connected:
+            print("Connection required")
+            return
+
+        self.loop.create_task(self._send())
+
+    async def _send(self):
+        state = await self._lib.send()
+        self._print_status(self._ip, state)
 
     def do_get(self, key: str) -> None:
         """get <key>

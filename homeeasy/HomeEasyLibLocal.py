@@ -27,8 +27,11 @@ class HomeEasyLibLocal:
 
     async def disconnect(self):
         if self._writer is not None:
-            self._writer.close()
-            await self._writer.wait_closed()
+            try:
+                self._writer.close()
+                await self._writer.wait_closed()
+            except:
+                pass
             self._writer = None
 
     async def request_status_async(self):
@@ -36,21 +39,31 @@ class HomeEasyLibLocal:
         return await self._send(data)
 
     async def _send(self, data):
-        try:
-            self._writer.write(data)
-            await self._writer.drain()
-            data = await asyncio.wait_for(self._reader.read(4096), 3.0)
-        except TimeoutError:
-            await self._reconnect()
-            pass
-        except ConnectionError:
-            await self._reconnect()
-            pass
-        except OSError:
-            await self._reconnect()
-            pass
+        retry = 0
+        while retry < 3:
+            retry = retry + 1
+            try:
+                try:
+                    await asyncio.wait_for(self._reader.read(len(data)*5), 1)
+                except:
+                    pass
 
-        self._state = DeviceState(data)
+                print(f"write {len(data)}")
+                self._writer.write(data)
+                await self._writer.drain()
+                resp = await asyncio.wait_for(self._reader.read(len(data)), 3.0)
+                print(f"read {len(resp)}")
+                if not len(resp) == len(data):
+                    raise TimeoutError()
+                self._state = DeviceState(resp)
+                break
+            except:
+                print("retry")
+                if retry < 3:
+                    await self._reconnect()
+                else:
+                    raise
+
         return self._state
 
     async def send(self, status: DeviceState = None):
