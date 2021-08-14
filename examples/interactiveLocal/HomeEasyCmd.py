@@ -26,7 +26,6 @@ class HomeEasyCmd(Cmd):
         self.intro = 'HomeEasy HVAC command tool. Type "help" to get some help.'
 
         self._ip = ''
-        self._lib = HomeEasyLibLocal()
         self._connected = False
 
     def start(self, loop=None):
@@ -42,21 +41,18 @@ class HomeEasyCmd(Cmd):
         self.loop.create_task(self._ip_async(ip))
 
     async def _ip_async(self, ip: str):
-        if not self._connected:
+        if self._connected:
             await self._lib.disconnect()
             self._connected = False
 
         self._ip = ip
+
+        self._lib = HomeEasyLibLocal(self.loop, self._print_status)
         await self._lib.connect(ip)
         self._connected = True
 
-    @staticmethod
-    def _print_status(ip: str, state: DeviceState) -> None:
-        print(f"Status {ip}:\n{state}")
-
-    @staticmethod
-    def _print_cmd(ip: str, state: DeviceState) -> None:
-        print(f"CMD {ip}:\n{state}")
+    def _print_status(self, state: DeviceState) -> None:
+        print(f"Status {self._ip}:\n{state}")
 
     def do_u(self, some = None) -> None:
         """update
@@ -74,7 +70,6 @@ class HomeEasyCmd(Cmd):
 
     async def _update_async(self):
         state = await self._lib.request_status_async()
-        self._print_status(self._ip, state)
 
     def do_s(self, somw = None) -> None:
         """send
@@ -91,8 +86,7 @@ class HomeEasyCmd(Cmd):
         self.loop.create_task(self._send())
 
     async def _send(self):
-        state = await self._lib.send()
-        self._print_status(self._ip, state)
+        await self._lib.send()
 
     def do_get(self, key: str) -> None:
         """get <key>
@@ -111,6 +105,10 @@ class HomeEasyCmd(Cmd):
     def do_set(self, key: str) -> None:
         """set <key> <value>
             Set property value for device."""
+
+        self.loop.create_task(self._set_async(key))
+
+    async def _set_async(self, key: str) -> None:
         split = key.split()
         if len(split) == 1:
             print("Value is required.")
@@ -125,7 +123,7 @@ class HomeEasyCmd(Cmd):
                 return
 
             self._lib.set(key, val)
-
+            await self._lib.send()
             self.do_get(key)
         except AttributeError:
             print(f"Invalid property {key}.")

@@ -16,14 +16,32 @@ class HomeEasyLibLocal:
     _host: str = ""
     _port: int = 0
 
+    def __init__(self, loop, callback) -> None:
+        self._loop = loop
+        self._callback = callback
+
     async def connect(self, host: str, port: int = 12416):
         self._host = host
         self._port = port
         await self._reconnect()
 
+    async def _read_async(self):
+        while True:
+            resp = await self._reader.read(21)
+            if not resp:
+                await self._reconnect()
+                return
+
+            print(f"read {len(resp)}")
+            if not len(resp) == 21:
+                continue
+            self._state = DeviceState(resp)
+            self._callback(self._state)
+
     async def _reconnect(self):
         await self.disconnect()
         self._reader, self._writer = await asyncio.open_connection(self._host, self._port)
+        task = self._loop.create_task(self._read_async())
 
     async def disconnect(self):
         if self._writer is not None:
@@ -43,19 +61,9 @@ class HomeEasyLibLocal:
         while retry < 3:
             retry = retry + 1
             try:
-                try:
-                    await asyncio.wait_for(self._reader.read(len(data)*5), 1)
-                except:
-                    pass
-
                 print(f"write {len(data)}")
                 self._writer.write(data)
                 await self._writer.drain()
-                resp = await asyncio.wait_for(self._reader.read(len(data)), 3.0)
-                print(f"read {len(resp)}")
-                if not len(resp) == len(data):
-                    raise TimeoutError()
-                self._state = DeviceState(resp)
                 break
             except:
                 print("retry")
@@ -63,8 +71,6 @@ class HomeEasyLibLocal:
                     await self._reconnect()
                 else:
                     raise
-
-        return self._state
 
     async def send(self, status: DeviceState = None):
         if status is None:
